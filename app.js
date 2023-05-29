@@ -1,4 +1,4 @@
-const ffmpeg = require("fluent-ffmpeg");
+const child_process = require("child_process");
 const fs = require("fs");
 const https = require("https");
 const ytdl = require("ytdl-core");
@@ -6,12 +6,12 @@ const ytdl = require("ytdl-core");
 const config = require("./config.json");
 const { log } = require("./log.js");
 
-try {
+/* try {
 	fs.rmSync("./cache/",{
 		recursive: true
 	});
 } catch {}
-fs.mkdirSync("./cache/");
+fs.mkdirSync("./cache/"); */
 
 const server = https.createServer({
 	cert: fs.readFileSync(config.server.ca.cert),
@@ -41,56 +41,78 @@ const server = https.createServer({
 				}
 			});
 
-			const downloadWebM = async (type) => {
-				res.send = () => {
-					const totalLength = fs.statSync(`./cache/${url.searchParams.get("id")}-${type}.webm`).size;
-					
-					if (req.headers.range) {
-						const range = req.headers.range.replace("bytes=","").split("-");
-						const start = range[0].length > 0 ? Number(range[0]) : 0;
-						const end = range[1].length > 0 ? Number(range[1]) : Math.min(start + config.server.chunksize,totalLength - 1);
-						const length = end - start + 1;
-						
-						res.writeHead(206,"Partial Content",{
-							"Accept-Ranges": "bytes",
-							"Content-Disposition": `attachment; filename="${type}.webm"`,
-							"Content-Length": length,
-							"Content-Range": `bytes ${start}-${end}/${totalLength}`,
-							"Content-Type": `${type}/webm`
-						});
-
-						fs.createReadStream(`./cache/${url.searchParams.get("id")}-${type}.webm`,{start,end}).pipe(res);
-						req.log(`Partial Content (${start}-${end})`,"success");
+			const downloadWebM = (type) => {
+				return new Promise(async (resolve) => {
+					if (fs.existsSync(`./cache/${url.searchParams.get("id")}-${type}.webm`)) {
+						resolve(`./cache/${url.searchParams.get("id")}-${type}.webm`);
 					} else {
-						res.writeHead(200,"OK",{
-							"Content-Disposition": `attachment; filename="${type}.webm"`,
-							"Content-Length": totalLength,
-							"Content-Type": `${type}/webm`
-						});
-						res.end(fs.readFileSync(`./cache/${url.searchParams.get("id")}-${type}.webm`));
+						ytdl.downloadFromInfo(await getInfos(),{
+							filter: (format) => format.container == "webm",
+							quality: `highest${type}`
+						})
+						.once("data",() => req.log(`Downloading ${type}...`,"info"))
+						.once("finish",() => resolve(`./cache/${url.searchParams.get("id")}-${type}.webm`))
+						.pipe(fs.createWriteStream(`./cache/${url.searchParams.get("id")}-${type}.webm`));
 					}
-				};
-
-				if (fs.existsSync(`./cache/${url.searchParams.get("id")}-${type}.webm`)) {
-					res.send();
-				} else {
-					ytdl.downloadFromInfo(await getInfos(),{
-						filter: (format) => format.container == "webm",
-						quality: `highest${type}`
-					})
-					.once("data",() => req.log(`Downloading ${type}...`,"info"))
-					.once("finish",res.send)
-					.pipe(fs.createWriteStream(`./cache/${url.searchParams.get("id")}-${type}.webm`));
-				}
+				});
 			};
 
 			switch (url.searchParams.get("type")) {
-				case "audio":
-					await downloadWebM("audio");
-					break;
-
 				case "video":
-					await downloadWebM("video");
+					const send = () => {
+						const totalLength = fs.statSync(`./cache/${url.searchParams.get("id")}.mp4`).size;
+					
+						if (req.headers.range) {
+							const range = req.headers.range.replace("bytes=","").split("-");
+							const start = range[0].length > 0 ? Number(range[0]) : 0;
+							const end = range[1].length > 0 ? Number(range[1]) : Math.min(start + config.server.chunksize,totalLength - 1);
+							const length = end - start + 1;
+							
+							res.writeHead(206,"Partial Content",{
+								"Accept-Ranges": "bytes",
+								"Content-Disposition": `attachment; filename="video.mp4"`,
+								"Content-Length": length,
+								"Content-Range": `bytes ${start}-${end}/${totalLength}`,
+								"Content-Type": "video/mp4"
+							});
+
+							fs.createReadStream(`./cache/${url.searchParams.get("id")}.mp4`,{start,end}).pipe(res);
+							req.log(`Partial Content (${start}-${end})`,"success");
+						} else {
+							res.writeHead(200,"OK",{
+								"Content-Disposition": `attachment; filename="video.mp4"`,
+								"Content-Length": totalLength,
+								"Content-Type": "video/mp4"
+							});
+							res.end(fs.readFileSync(`./cache/${url.searchParams.get("id")}.mp4`));
+						}	
+					};
+
+					if (fs.existsSync(`./cache/${url.searchParams.get("id")}.mp4`)) {
+						send();
+					} else {
+						await downloadWebM("audio");
+						await downloadWebM("video");
+						req.log(`Merging to mp4...`,"info");
+						const cs = child_process.spawn("ffmpeg",[
+							"-hide_banner",
+							"-loglevel","info",
+
+							"-i",`./cache/${url.searchParams.get("id")}-video.webm`,
+							"-i",`./cache/${url.searchParams.get("id")}-audio.webm`,
+
+							"-preset","ultrafast",
+
+							"-y",
+							`./cache/${url.searchParams.get("id")}.mp4`
+						],{
+							windowsHide: true
+						});
+						cs.on("close",(code) => {
+							log(`ffmpeg exited: ${code}`,"log");
+							send();
+						});
+					}
 					break;
 				
 				case "poster":

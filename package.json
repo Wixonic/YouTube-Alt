@@ -16,7 +16,6 @@
 		"node": ">=16.x.x"
 	},
 	"dependencies": {
-		"fluent-ffmpeg": "^2.1.2",
 		"ytdl-core": "^4.11.4"
 	}
 }
