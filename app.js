@@ -1,32 +1,143 @@
+const ffmpeg = require("fluent-ffmpeg");
 const fs = require("fs");
 const https = require("https");
+const ytdl = require("ytdl-core");
 
 const config = require("./config.json");
 const { log } = require("./log.js");
 
-let requestCount = 0;
+try {
+	fs.rmSync("./cache/",{
+		recursive: true
+	});
+} catch {}
+fs.mkdirSync("./cache/");
+
 const server = https.createServer({
 	cert: fs.readFileSync(config.server.ca.cert),
 	key: fs.readFileSync(config.server.ca.key)
-},(req,res) => {
-	req.id = `${requestCount}-${req.socket.remoteAddress}`;
-	req.log = (text,format) => log(`${req.id}: ${text}`,format || "log");
-
+},async (req,res) => {
 	const url = new URL(config.server.host + req.url.split("..").join(""));
-	const params = new URLSearchParams(url.search);
+	req.log = (text,format) => log(`${req.socket.remoteAddress}: ${url.pathname + url.search} - ${text}`,format);
+	
+	if (req.method == "GET") {
+		try {
+			const videoUrl = `https://www.youtube.com/watch?v=${url.searchParams.get("id")}`;
 
-	req.log(`New request. Asked: ${req.method} ${url.toString()}`);
+			const getInfos = () => new Promise(async (resolve) => {
+				try {
+					if (fs.existsSync(`./cache/${url.searchParams.get("id")}.json`)) {
+						resolve(JSON.parse(fs.readFileSync(`./cache/${url.searchParams.get("id")}.json`,"utf-8")));
+					} else {
+						const infos = await ytdl.getInfo(videoUrl);
+						fs.writeFileSync(`./cache/${url.searchParams.get("id")}.json`,JSON.stringify(infos),{
+							encoding: "utf-8"
+						});
+						resolve(infos);
+					}
+				} catch {
+					res.writeHead(404,"Not Found").end();
+					req.log("Not Found","warn");
+				}
+			});
 
-	if (req.method === "GET") {
-		if 
+			const downloadWebM = async (type) => {
+				res.send = () => {
+					const totalLength = fs.statSync(`./cache/${url.searchParams.get("id")}-${type}.webm`).size;
+					
+					if (req.headers.range) {
+						const range = req.headers.range.replace("bytes=","").split("-");
+						const start = range[0].length > 0 ? Number(range[0]) : 0;
+						const end = range[1].length > 0 ? Number(range[1]) : Math.min(start + config.server.chunksize,totalLength - 1);
+						const length = end - start + 1;
+						
+						res.writeHead(206,"Partial Content",{
+							"Accept-Ranges": "bytes",
+							"Content-Disposition": `attachment; filename="${type}.webm"`,
+							"Content-Length": length,
+							"Content-Range": `bytes ${start}-${end}/${totalLength}`,
+							"Content-Type": `${type}/webm`
+						});
+
+						fs.createReadStream(`./cache/${url.searchParams.get("id")}-${type}.webm`,{start,end}).pipe(res);
+						req.log(`Partial Content (${start}-${end})`,"success");
+					} else {
+						res.writeHead(200,"OK",{
+							"Content-Disposition": `attachment; filename="${type}.webm"`,
+							"Content-Length": totalLength,
+							"Content-Type": `${type}/webm`
+						});
+						res.end(fs.readFileSync(`./cache/${url.searchParams.get("id")}-${type}.webm`));
+					}
+				};
+
+				if (fs.existsSync(`./cache/${url.searchParams.get("id")}-${type}.webm`)) {
+					res.send();
+				} else {
+					ytdl.downloadFromInfo(await getInfos(),{
+						filter: (format) => format.container == "webm",
+						quality: `highest${type}`
+					})
+					.once("data",() => req.log(`Downloading ${type}...`,"info"))
+					.once("finish",res.send)
+					.pipe(fs.createWriteStream(`./cache/${url.searchParams.get("id")}-${type}.webm`));
+				}
+			};
+
+			switch (url.searchParams.get("type")) {
+				case "audio":
+					await downloadWebM("audio");
+					break;
+
+				case "video":
+					await downloadWebM("video");
+					break;
+				
+				case "poster":
+					const thumbnail = (await getInfos()).videoDetails.thumbnails;
+					res.writeHead(302,"OK",{
+						"Content-Disposition": `attachment; filename="poster.jpg"`,
+						"Content-Type": "image/jpg",
+						"Location": `https://i.ytimg.com/vi/${url.searchParams.get("id")}/maxresdefault.jpg`
+					}).end(JSON.stringify(thumbnail));
+					req.log("OK","success");
+					break;
+				
+				case "player":
+					const infos = await getInfos();
+					const parsing = {
+						id: url.searchParams.get("id"),
+						title: infos.videoDetails.title,
+						channel: infos.videoDetails.author.name,
+						channelId: infos.videoDetails.author.id,
+						verified: infos.videoDetails.author.verified
+					};
+
+					let HTML = fs.readFileSync("./player.html","utf-8");
+					for (let name in parsing) {
+						HTML = HTML.split(`{{${name.toUpperCase()}}}`).join(parsing[name]);
+					}
+
+					res.writeHead(200,"OK",{
+						"Content-Disposition": "inline",
+						"Content-Length": HTML.length,
+						"Content-Type": "text/html; charset=utf-8"
+					}).end(HTML);
+					req.log("OK","success");
+					break;
+				
+				default:
+					res.writeHead(400,"Bad Request").end();
+					req.log("Bad Request","log");
+					break;
+			}
+		} catch (e) {
+			res.writeHead(500,"Internal Server Error").end();
+			req.log(`Internal Server Error: ${e}`,"error");
+		}
 	} else {
-		req.log("Forbidden.","error");
-
-		const body = `This url is <b>forbidden</b>. Please contact the guy who gives you this...`;
-		res.writeHead(403,{
-			"Content-Length": Buffer.byteLength(body),
-			"Content-Type": "text/html"
-		}).end(body);
+		res.writeHead(405,"Method Not Allowed").end();
+		req.log("Method Not Allowed","warn");
 	}
 });
 
