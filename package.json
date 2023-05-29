@@ -1,0 +1,21 @@
+{
+	"author": "Wixonic <contact@wixonic.fr> (https://wixonic.fr)",
+	"bugs": {
+		"url": "https://github.com/Wixonic/YouTube-download/issues",
+		"email": "contact@wixonic.fr"
+	},
+	"homepage": "https://github.com/Wixonic/YouTube-download#readme",
+	"license": "MIT",
+	"version": "0.0.1",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Wixonic/YouTube-download.git"
+	},
+	"main": "app.js",
+	"engines": {
+		"node": ">=16.x.x"
+	},
+	"dependencies": {
+		"ytdl-core": "^4.11.4"
+	}
+}
