@@ -1,0 +1,160 @@
+@import url("https://rsms.me/inter/inter.css");
+
+* {
+	--background: #F0F0F0;
+	--text-color: #000;
+	--font: "Inter", "Avenir Next", Avenir, Arial, Futura;
+
+	appearance: none;
+	-webkit-user-drag: none;
+	user-select: none;
+	
+	box-sizing: border-box;
+	outline: none;
+	
+	margin: 0;
+	padding: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+	* {
+		--background: #222;
+		--text-color: #FFF;
+	}
+}
+
+body {
+	background: var(--background);
+	
+	color: var(--text-color);
+	font-family: var(--font);
+}
+
+input {
+	background: none;
+
+	color: var(--text-color);
+	font-family: var(--font);
+
+	border: none;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+	display: none;
+}
+
+svg.icon {
+	fill: currentColor;
+
+	width: 1em;
+	height: 1em;
+    
+	vertical-align: -.125em;
+}
+
+svg.icon .fa-secondary {
+	opacity: 0.5;
+}
+
+header,
+footer {
+	align-items: center;
+
+	position: fixed;
+	left: 0;
+
+	width: 100%;
+	height: 3rem;
+
+	background: var(--background);
+
+	padding: 0.3rem 0;
+}
+
+header {
+	display: flex;
+	justify-content: space-between;
+
+	top: 0;
+}
+
+header > img.logo,
+header > div.profile > img.logo {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
+header > div.search,
+header > div.search > input#search {
+	width: 100%;
+}
+
+header > div.search > input#search {
+	text-align: center;
+}
+
+header > div.profile > img.logo {
+	border-radius: 1.5rem;
+}
+
+footer {
+	display: grid;
+	grid-auto-columns: 1fr;
+	grid-template-rows: 3rem;
+	grid-auto-flow: column dense;
+
+	bottom: 0;
+}
+
+footer > button {
+	width: fit-content;
+
+	margin: auto;
+}
+
+div.main {
+	display: grid;
+	grid-template-columns: repeat(auto-fit,min(15rem,100%));
+	grid-auto-rows: 10rem;
+	gap: 0.5rem;
+	justify-content: center;
+
+	position: fixed;
+	top: 3rem;
+	left: 0;
+
+	width: 100vw;
+	height: calc(100vh - 6rem);
+
+	overflow: hidden scroll;
+}
+
+div.main > div.video {
+	display: grid;
+	grid-template-columns: 100%;
+	grid-template-rows: 1.2rem auto 1rem;
+	gap: 0.2rem;
+
+	width: 100%;
+	height: 100%;
+}
+
+div.main > div.video > div.title {
+	display: block;
+
+	width: 100%;
+
+	font-size: 0.8rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	overflow: hidden;
+}
+
+div.main > div.video > img.thumbnail {
+	display: block;
+
+	width: 100%;
+
+	border-radius: 0.5rem;
+}
