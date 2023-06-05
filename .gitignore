@@ -1,9 +1,7 @@
-out/
+dist/
 node_modules/
 
 config.json
 package-lock.json
-preload.bundled.js
 
 .DS_Store
-out/

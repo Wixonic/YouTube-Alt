@@ -3,6 +3,7 @@
 * {
 	--background: #F0F0F0;
 	--text-color: #000;
+	--transparent-gray: rgba(127,127,127,0.2);
 	--font: "Inter", "Avenir Next", Avenir, Arial, Futura;
 
 	appearance: none;
@@ -43,17 +44,13 @@ input[type="search"]::-webkit-search-cancel-button {
 	display: none;
 }
 
-svg.icon {
+.icon {
 	fill: currentColor;
 
 	width: 1em;
 	height: 1em;
     
 	vertical-align: -.125em;
-}
-
-svg.icon .fa-secondary {
-	opacity: 0.5;
 }
 
 header,
@@ -64,7 +61,6 @@ footer {
 	left: 0;
 
 	width: 100%;
-	height: 3rem;
 
 	background: var(--background);
 
@@ -76,21 +72,40 @@ header {
 	justify-content: space-between;
 
 	top: 0;
+
+	height: 2rem;
 }
 
 header > img.logo,
 header > div.profile > img.logo {
+	display: block;
+
 	width: 1.5rem;
 	height: 1.5rem;
 }
 
-header > div.search,
-header > div.search > input#search {
+header > input#search {
+	display: block;
+
 	width: 100%;
+
+	text-align: center;
+	
+	border-radius: 0.25rem;
+
+	transition: background 0.1s linear;
+
+	cursor: pointer;
 }
 
-header > div.search > input#search {
-	text-align: center;
+header > div.search > input#search:hover {
+	background: var(--transparent-gray);
+}
+
+header > div.search > input#search:focus {
+	background: var(--transparent-gray);
+
+	cursor: text;
 }
 
 header > div.profile > img.logo {
@@ -100,61 +115,192 @@ header > div.profile > img.logo {
 footer {
 	display: grid;
 	grid-auto-columns: 1fr;
-	grid-template-rows: 3rem;
+	grid-template-rows: 100%;
 	grid-auto-flow: column dense;
 
 	bottom: 0;
+
+	height: 3rem;
 }
 
 footer > button {
 	width: fit-content;
 
+	border: none;
+
 	margin: auto;
+	padding: 0.25rem;
+}
+
+footer > button.selected {
+	color: #F00;
+}
+
+footer > button:not(.selected) {
+	border-radius: 0.25rem;
+
+	transition: background 0.1s linear;
+
+	cursor: pointer;
+}
+
+footer > button:not(.selected):hover {
+	background: var(--transparent-gray);
 }
 
 div.main {
-	display: grid;
-	grid-template-columns: repeat(auto-fit,min(15rem,100%));
-	grid-auto-rows: 10rem;
-	gap: 0.5rem;
-	justify-content: center;
-
 	position: fixed;
-	top: 3rem;
+	top: 2rem;
 	left: 0;
 
 	width: 100vw;
-	height: calc(100vh - 6rem);
+	height: calc(100vh - 4.5rem);
 
 	overflow: hidden scroll;
 }
 
-div.main > div.video {
+div.main[page="home"] {
+	display: grid;
+	grid-template-columns: repeat(auto-fit,min(20rem,100%));
+	grid-auto-rows: min(fit-content,12rem);
+	justify-content: center;
+}
+
+div.main[page="home"] > div.video {
 	display: grid;
 	grid-template-columns: 100%;
-	grid-template-rows: 1.2rem auto 1rem;
-	gap: 0.2rem;
+	grid-template-rows: 1.5rem auto 1.2rem;
+
+	width: 100%;
+	height: 100%;
+
+	border-radius: 0.25rem;
+
+	padding: 0.5rem;
+
+	transition: background 0.1s linear;
+
+	cursor: pointer;
+}
+
+div.main[page="home"] > div.video:hover {
+	background: var(--transparent-gray);
+}
+
+div.main[page="home"] > div.video > div.title {
+	display: block;
+
+	width: 100%;
+
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	margin: auto 0;
+
+	overflow: hidden;
+}
+
+div.main[page="home"] > div.video > img.thumbnail {
+	display: block;
+
+	aspect-ratio: 16 / 9;
+	max-width: 100%;
+	max-height: 100%;
+
+	border-radius: 0.5rem;
+}
+
+div.main[page="home"] > div.video > div.channel {
+	display: grid;
+	grid-template-columns: 1.2rem 100%;
+	grid-template-rows: 1.2rem;
+	gap: 0.3rem;
 
 	width: 100%;
 	height: 100%;
 }
 
-div.main > div.video > div.title {
-	display: block;
-
+div.main[page="home"] > div.video > div.channel > div.title {
 	width: 100%;
 
 	font-size: 0.8rem;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 
+	margin: auto 0;
+
 	overflow: hidden;
 }
 
-div.main > div.video > img.thumbnail {
+div.main[page="home"] > div.video > div.channel > img.logo {
 	display: block;
 
-	width: 100%;
+	width: 1.2rem;
+	height: 1.2rem;
+}
 
-	border-radius: 0.5rem;
+div.main[page="video"] > div.player {
+	max-width: 100vw;
+	width: 100%;
+	max-height: calc(100vh - 5rem);
+	height: 100%;
+
+	margin: auto;
+
+	overflow: hidden;
+}
+
+div.main[page="video"] > div.player > video {
+	width: 100%;
+	max-height: 100%;
+
+	overflow: hidden;
+}
+
+div.main[page="video"] > div.player > div.controls {
+	display: none;
+	grid-template-columns: 2rem auto 2rem 2rem 2rem;
+	grid-template-rows: 2rem auto 2rem;
+	
+	position: absolute;
+	top: 0;
+	left: 0;
+
+	background: linear-gradient(180deg,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0) 25%,rgba(0,0,0,0) 75%,rgba(0,0,0,0.5) 100%);
+
+	opacity: 0;
+
+	transition: opacity 0.5s linear;
+}
+
+div.main[page="video"] > div.player > div.controls.visible {
+	opacity: 1;
+	
+	transition: opacity 0.1s linear;
+}
+
+div.main[page="video"] > div.player > div.controls > button.status {
+	grid-row: 3;
+	grid-column: 1;
+}
+
+div.main[page="video"] > div.player > div.controls > button.settings {
+	grid-row: 3;
+	grid-column: 3;
+}
+
+div.main[page="video"] > div.player > div.controls > button.pip {
+	grid-row: 3;
+	grid-column: 4;
+}
+
+div.main[page="video"] > div.player > div.controls > button.fullscreen {
+	grid-row: 3;
+	grid-column: 5;
+}
+
+@media (min-width: 40rem) {
+	div.main[page="video"] > div.player {
+		max-width: calc(100vw - 10rem);
+	}
 }

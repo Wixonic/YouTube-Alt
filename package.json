@@ -14,37 +14,33 @@
 	},
 	"main": "app.js",
 	"scripts": {
-		"start": "electron-forge start",
-		"package": "electron-forge package",
-		"make": "electron-forge make"
+		"start": "electron .",
+		"build": "electron-builder build"
 	},
 	"engines": {
 		"node": ">=16.x.x"
 	},
 	"dependencies": {
+		"discord-rpc": "^4.0.1",
+		"electron-forge": "^5.2.4",
 		"ytdl-core": "^4.11.4"
 	},
 	"devDependencies": {
-		"@electron-forge/cli": "^6.1.1",
-		"@electron-forge/maker-dmg": "^6.1.1",
-		"electron": "^24.4.0"
+		"electron": "^25.0.1",
+		"electron-builder": "^23.6.0"
 	},
-	"config": {
-		"forge": {
-			"packagerConfig": {
-				"appCopyright": "Copyright (c) 2023 Wixonic",
-				"icon": "./assets/icon",
-				"overwrite": true,
-				"name": "YouTube Download"
-			},
-			"makers": [
+	"build": {
+		"appId": "fr.wixonic.youtube-download",
+		"productName": "YouTube Download",
+		"mac": {
+			"icon": "./assets/icon.icns",
+			"target": [
 				{
-					"name": "@electron-forge/maker-dmg",
-					"config": {
-						"format": "ULFO",
-						"icon": "./assets/icon.png",
-						"name": "YouTube Download"
-					}
+					"target": "dmg",
+					"arch": [
+						"x64",
+						"arm64"
+					]
 				}
 			]
 		}
