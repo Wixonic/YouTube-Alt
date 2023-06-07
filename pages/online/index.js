@@ -58,16 +58,6 @@ const Pages = {
 				formats.videoList.sort((a,b) => (a.height == b.height ? (a.width == b.width ? (a.fps == b.fps ? a.hasAudio && !b.hasAudio : a.fps > b.fps) : a.width > b.width) : a.height > b.height) ? -1 : 1);
 				
 				const player = document.createElement("div");
-				const audioElement = document.createElement("audio");
-				const videoElement = document.createElement("video");
-				const controls = document.createElement("div");
-				const statusButton = document.createElement("button");
-				const settingsButton = document.createElement("button");
-				const settingsPopup = document.createElement("div");
-				const pipButton = document.createElement("button");
-				const fullscreenButton = document.createElement("button");
-				const info = document.createElement("div");
-				const author = document.createElement("div");
 
 				player.play = (format) => {
 					videoElement.innerHTML = "";
@@ -81,7 +71,7 @@ const Pages = {
 
 					videoElement.addEventListener("loadedmetadata",() => {
 						controls.style.display = "grid";
-						videoElement.setAttribute("poster",datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url);
+						videoElement.poster = datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url;
 					});
 
 					videoElement.addEventListener("error",() => {
@@ -99,22 +89,57 @@ const Pages = {
 
 						audioElement.addEventListener("play",() => videoElement.play());
 						audioElement.addEventListener("pause",() => videoElement.pause());
+
 						videoElement.addEventListener("play",() => audioElement.play());
 						videoElement.addEventListener("pause",() => audioElement.pause());
 
 						audioElement.addEventListener("seeking",() => videoElement.playbackRate = 0);
-						audioElement.addEventListener("seeked",() => {
-							videoElement.currentTime = audioElement.currentTime;
+						audioElement.addEventListener("seeked",async () => {
+							if (videoElement.readyState < 3) {
+								await new Promise((resolve) => videoElement.addEventListener("canplaythrough",resolve));
+							}
 							videoElement.playbackRate = 1;
 						});
 
-						videoElement.addEventListener("seeking",() => audioElement.muted = true);
-						videoElement.addEventListener("seeked",() => {
-							audioElement.currentTime = videoElement.currentTime;
-							audioElement.muted = false;
+						videoElement.addEventListener("seeking",() => audioElement.playbackRate = 0);
+						videoElement.addEventListener("seeked",async () => {
+							if (audioElement.readyState < 3) {
+								await new Promise((resolve) => audioElement.addEventListener("canplaythrough",resolve));
+							}
+							audioElement.playbackRate = 1;
+						});
+
+						videoElement.addEventListener("progress",() => {
+							const start = videoElement.buffered.start();
+						});
+
+						const synchronize = () => {
+							if (Math.sqrt(Math.pow(audioElement.currentTime - videoElement.currentTime,2)) > 0.1) {
+								videoElement.currentTime = audioElement.currentTime;
+							}
+						};
+
+						audioElement.addEventListener("timeupdate",synchronize);
+						videoElement.addEventListener("timeupdate",() => {
+							cursor.style.left = `${videoElement.currentTime / videoElement.duration * 100}%`;
+							synchronize();
 						});
 					}
 				};
+
+				const audioElement = document.createElement("audio");
+				const videoElement = document.createElement("video");
+				const controls = document.createElement("div");
+				const statusButton = document.createElement("button");
+				const settingsButton = document.createElement("button");
+				const settingsPopup = document.createElement("div");
+				const pipButton = document.createElement("button");
+				const fullscreenButton = document.createElement("button");
+				const progressBarContainer = document.createElement("div");
+				const progressBar = document.createElement("div");
+				const cursor = document.createElement("div");
+				const info = document.createElement("div");
+				const author = document.createElement("div");
 
 				player.classList.add("player");
 				controls.classList.add("controls");
@@ -122,8 +147,13 @@ const Pages = {
 				settingsButton.classList.add("settings");
 				pipButton.classList.add("pip");
 				fullscreenButton.classList.add("fullscreen");
+				progressBarContainer.classList.add("bar");
+				progressBar.classList.add("bar");
+				cursor.classList.add("cursor");
 				info.classList.add("info");
 				author.classList.add("author");
+
+				videoElement.preload = "auto";
 
 				controls.addEventListener("mousenter",() => controls.classList.add("visible"));
 				controls.addEventListener("mousemove",() => {
@@ -162,7 +192,8 @@ const Pages = {
 				observer.observe(document.documentElement);
 
 				videoElement.append(audioElement);
-				controls.append(statusButton,settingsButton);
+				progressBarContainer.append(progressBar,cursor);
+				controls.append(statusButton,settingsButton,progressBarContainer);
 				if (document.pictureInPictureEnabled) controls.append(pipButton);
 				if (document.fullscreenEnabled) controls.append(fullscreenButton);
 				player.append(videoElement,controls,settingsPopup);
