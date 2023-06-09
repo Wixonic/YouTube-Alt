@@ -1,6 +1,7 @@
+const { spawn } = require("child_process");
 const DiscordRPC = require("discord-rpc");
 const dns = require("dns");
-const { app, BrowserWindow, dialog, ipcMain, nativeTheme } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, nativeTheme, ipcRenderer } = require("electron");
 const fs = require("fs");
 const https = require("https");
 const ytdl = require("ytdl-core");
@@ -173,19 +174,151 @@ const launch = () => {
 };
 
 app.on("ready",() => {
-	ipcMain.handle("youtube:combine",(_,audio,video) => null);
+	ipcMain.handle("youtube:download",(_,datas) => new Promise(async (resolve,reject) => {
+		class Downloader {
+			constructor (path,url) {
+				this.downloaded = 0;
+				this.length = 0;
+				this.path = path;
+				this.stream = fs.createWriteStream(path);
+				this.url = url;
+			};
 
-	ipcMain.handle("youtube:convert",(_,file,format) => null);
+			get percent () {
+				try {
+					return this.downloaded / this.length * 100;
+				} catch {
+					return 0;
+				}
+			};
+			
+			progress (percent) {};
+
+			getChunk (start=0,end=1) {
+				return new Promise((resolve,reject) => {
+					https.get(this.url,{
+						headers: {
+							"Range": `bytes=${start}-${end}`
+						},
+						timeout: 5000
+					},(res) => {
+						if (res.statusCode === 206) {
+							res.response = "";
+							res.on("data",(chunk) => {
+								res.response += chunk;
+								this.downloaded += chunk.length;
+							});
+							res.on("error",(e) => reject(e));
+							resolve(res);
+						} else {
+							reject(res.statusCode);
+						}
+					});
+				});
+			};
+
+			start () {
+				return new Promise(async (resolve,reject) => {
+					this.length = await new Promise((resolve) => https.get(this.url,{
+						headers: {
+							"Range": "bytes=0-1"
+						},
+						timeout: 5000
+					},(res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
+
+					while (this.downloaded < this.length) {
+						const start = this.downloaded;
+						const end = Math.min(start + 2 ** 20,this.length - 1);
+
+						const download = async () => {
+							try {
+								const res = await this.getChunk(start,end);
+								res.pipe(this.stream,{end: end + 1 === this.length});
+								this.progress(this.percent);
+								await new Promise((resolve) => res.on("end",resolve));
+							} catch {
+								if (download.retries < 5) {
+									reject(`Failed to download part ${start}-${end}`)
+								}
+							}
+						};
+
+						download.retries = 0;
+						await download();
+					}
+
+					resolve();
+				});
+			};
+		};
+		
+		const tempPath = `${app.getPath("temp")}YouTube Download/downloads/${datas.id}-${datas.quality}`;
+		const downloadPath = `${app.getPath("documents")}/YouTube Download/downloads/${datas.id}`;
+
+		if (!fs.existsSync(tempPath)) {
+			fs.mkdirSync(tempPath,{recursive: true});
+		}
+
+		if (!fs.existsSync(downloadPath)) {
+			fs.mkdirSync(downloadPath,{recursive: true});
+		}
+
+		const progress = (log) => console.log((new Date()).toISOString(),log);
+
+		const audioDownloader = new Downloader(`${tempPath}/audio.webm`,datas.audio);
+		const videoDownloader = new Downloader(`${tempPath}/video.webm`,datas.video);
+
+		audioDownloader.progress = (percent) => progress(`Downloading audio: ${percent.toFixed(2)}%`);
+		videoDownloader.progress = (percent) => progress(`Downloading video: ${percent.toFixed(2)}%`);
+
+		// audioDownloader.start();
+		// videoDownloader.start();
+
+		const ffmpegProcess = spawn("ffmpeg",[
+			"-hide_banner",
+			"-i",`${tempPath}/audio.webm`,
+			"-i",`${tempPath}/video.webm`,
+			/* "-i",`${datas.cover}`, */
+			"-metadata",`title=${datas.title}`,
+			"-metadata",`artist=${datas.channel}`,
+			"-metadata",`creation_date=${datas.publishDate}`,
+			"-c:a","aac",
+			"-c:v","libx264",
+			"-preset","ultrafast",
+			"-crf","30",
+			"-y",
+			`${downloadPath}/${datas.quality}.mp4`
+		]);
+
+		ffmpegProcess.stdout.on("data",(chunk) => process.stdout.write(chunk));
+		ffmpegProcess.stderr.on("data",(chunk) => process.stderr.write(chunk));
+
+		ffmpegProcess.on("exit",(code) => {
+			if (code === 0) {
+				resolve();
+			} else {
+				console.error(`ffmpeg exit with ${code}`);
+			}
+		});
+	}));
 
 	ipcMain.handle("youtube:info",async (_,id,country="EN") => {
-		const path = `${app.getPath("temp")}ytdl-cache/${id}/info.json`;
+		const path = `${app.getPath("temp")}YouTube Download/ytdl-cache/${id}/info.json`;
 		if (fs.existsSync(path)) {
-			return JSON.parse(fs.readFileSync(path,"utf-8"));
+			const file = JSON.parse(fs.readFileSync(path,"utf-8"));
+
+			if (file.expireAt < Date.now()) {
+				fs.rmSync(path);
+				return "Expired";
+			} else {
+				return file;
+			}
 		} else {
 			try {
 				fs.mkdirSync(path.replace("info.json",""),{recursive: true});
 			} catch {}
 			const datas = await ytdl.getInfo(id,{lang: country});
+			datas.expireAt = Date.now() + datas.player_response.streamingData.expiresInSeconds;
 			fs.writeFileSync(path,JSON.stringify(datas),"utf-8");
 			return datas;
 		}

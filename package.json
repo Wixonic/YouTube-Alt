@@ -7,7 +7,7 @@
 	},
 	"homepage": "https://github.com/Wixonic/YouTube-download#readme",
 	"license": "MIT",
-	"version": "0.0.1",
+	"version": "1.0.0-dev-2",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Wixonic/YouTube-download.git"
@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"discord-rpc": "^4.0.1",
-		"electron-forge": "^5.2.4",
+		"fluent-ffmpeg": "^2.1.2",
 		"ytdl-core": "^4.11.4"
 	},
 	"devDependencies": {
