@@ -159,14 +159,16 @@ div.main {
 	overflow: hidden scroll;
 }
 
-div.main[page="home"] {
+div.main[page="home"],
+div.main[page="search"] {
 	display: grid;
 	grid-template-columns: repeat(auto-fit,min(20rem,100%));
 	grid-auto-rows: min(fit-content,12rem);
 	justify-content: center;
 }
 
-div.main[page="home"] > div.video {
+div.main[page="home"] > div.video,
+div.main[page="search"] > div.video {
 	display: grid;
 	grid-template-columns: 100%;
 	grid-template-rows: 1.5rem auto 1.2rem;
@@ -183,11 +185,17 @@ div.main[page="home"] > div.video {
 	cursor: pointer;
 }
 
-div.main[page="home"] > div.video:hover {
+div.main[page="home"] > div.video:hover,
+div.main[page="search"] > div.channel:hover,
+div.main[page="search"] > div.video:hover {
 	background: var(--transparent-gray);
 }
 
-div.main[page="home"] > div.video > div.title {
+div.main[page="home"] > div.video > div.title,
+div.main[page="search"] > div.video > div.title {
+	grid-row: 1;
+	grid-column: 1;
+
 	display: block;
 
 	width: 100%;
@@ -200,7 +208,11 @@ div.main[page="home"] > div.video > div.title {
 	overflow: hidden;
 }
 
-div.main[page="home"] > div.video > img.thumbnail {
+div.main[page="home"] > div.video > img.thumbnail,
+div.main[page="search"] > div.video > img.thumbnail {
+	grid-row: 2;
+	grid-column: 1;
+
 	display: block;
 
 	aspect-ratio: 16 / 9;
@@ -210,7 +222,11 @@ div.main[page="home"] > div.video > img.thumbnail {
 	border-radius: 0.5rem;
 }
 
-div.main[page="home"] > div.video > div.channel {
+div.main[page="home"] > div.video > div.channel,
+div.main[page="search"] > div.video > div.channel {
+	grid-row: 3;
+	grid-column: 1;
+
 	display: grid;
 	grid-template-columns: 1.2rem 100%;
 	grid-template-rows: 1.2rem;
@@ -220,7 +236,11 @@ div.main[page="home"] > div.video > div.channel {
 	height: 100%;
 }
 
-div.main[page="home"] > div.video > div.channel > div.title {
+div.main[page="home"] > div.video > div.channel > div.title,
+div.main[page="search"] > div.video > div.channel > div.title {
+	grid-row: 1;
+	grid-column: 2;
+
 	width: 100%;
 
 	font-size: 0.8rem;
@@ -232,11 +252,90 @@ div.main[page="home"] > div.video > div.channel > div.title {
 	overflow: hidden;
 }
 
-div.main[page="home"] > div.video > div.channel > img.logo {
+div.main[page="home"] > div.video > div.channel > img.logo,
+div.main[page="search"] > div.video > div.channel > img.logo {
+	grid-row: 1;
+	grid-column: 1;
+
 	display: block;
 
 	width: 1.2rem;
 	height: 1.2rem;
+
+	border-radius: 1.2rem;
+}
+
+div.main[page="search"] > div.channel {
+	display: grid;
+	grid-template-columns: 5rem auto auto;
+	grid-template-rows: 5rem auto;
+
+	width: 100%;
+	height: 100%;
+
+	border-radius: 0.25rem;
+
+	padding: 0.5rem;
+
+	transition: background 0.1s linear;
+
+	cursor: pointer;
+}
+
+div.main[page="search"] > div.channel > img.thumbnail {
+	grid-row: 1;
+	grid-column: 1;
+
+	width: 5rem;
+	height: 5rem;
+	
+	border-radius: 5rem;
+}
+
+div.main[page="search"] > div.channel > div.title {
+	grid-row: 1;
+	grid-column: 2 / 3;
+
+	width: 100%;
+
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	margin: auto 0;
+
+	overflow: hidden;
+}
+
+div.main[page="search"] > div.channel > div.description {
+	grid-row: 2;
+	grid-column: 3;
+
+	width: 100%;
+	max-height: 12rem;
+
+	font-size: 0.8rem;
+	text-overflow: ellipsis;
+
+	margin: auto 0;
+
+	overflow: hidden;
+}
+
+div.main[page="search"] > div.channel > div.statistics {
+	grid-row: 2;
+	grid-column: 1 / 2;
+
+	width: 100%;
+}
+
+div.main[page="search"] > div.channel > div.statistics > div.subscribers {
+	width: 100%;
+}
+
+div.main[page="search"] > div.channel > div.statistics > div.videos {
+	width: 100%;
 }
 
 div.main[page="video"] > div.player {
@@ -342,7 +441,7 @@ div.main[page="video"] > div.player > div.controls > div.bar > div.cursor {
 	height: 0.75rem;
 
 	background: #FFF;
-
+	
 	border-radius: 0.2rem;
 }
 

@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 const DiscordRPC = require("discord-rpc");
 const dns = require("dns");
-const { app, BrowserWindow, dialog, ipcMain, nativeTheme, ipcRenderer } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, nativeTheme } = require("electron");
 const fs = require("fs");
 const https = require("https");
 const ytdl = require("ytdl-core");
@@ -26,7 +26,7 @@ const refreshToken = () => new Promise((resolve) => {
 					const hash = new URLSearchParams(url.split("#")[1]);
 
 					if (hash.get("access_token")) {
-						fs.writeFileSync(`${app.getPath("appData")}/token`,hash.get("access_token"),"utf-8");
+						fs.writeFileSync(`${app.getPath("appData")}/Youtube Download/token`,hash.get("access_token"),"utf-8");
 
 						config.token = hash.get("access_token");
 						resolve(config.token);
@@ -75,8 +75,8 @@ const launch = () => {
 		if (!error) { // isOnline
 			if (!config.token) {
 				config.token = await new Promise(async (resolve) => {
-					if (fs.existsSync(`${app.getPath("appData")}/token`)) {
-						resolve(fs.readFileSync(`${app.getPath("appData")}/token`,"utf-8"));
+					if (fs.existsSync(`${app.getPath("appData")}/Youtube Download/token`)) {
+						resolve(fs.readFileSync(`${app.getPath("appData")}/Youtube Download/token`,"utf-8"));
 					} else {
 						const window = new BrowserWindow({
 							backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
@@ -93,7 +93,11 @@ const launch = () => {
 								const hash = new URLSearchParams(url.split("#")[1]);
 	
 								if (hash.get("access_token")) {
-									fs.writeFileSync(`${app.getPath("appData")}/token`,hash.get("access_token"),"utf-8");
+									try {
+										fs.mkdirSync(`${app.getPath("appData")}/Youtube Download`);
+									} catch {}
+
+									fs.writeFileSync(`${app.getPath("appData")}/Youtube Download/token`,hash.get("access_token"),"utf-8");
 	
 									resolve(hash.get("access_token"));
 								} else {
@@ -138,7 +142,7 @@ const launch = () => {
 						setTimeout(refreshToken,Number(res.datas.expires_in) * 1000);
 					});
 				} else {
-					fs.rmSync(`${app.getPath("appData")}/token`,{
+					fs.rmSync(`${app.getPath("appData")}/Youtube Download/token`,{
 						force: true
 					});
 	
@@ -271,21 +275,29 @@ app.on("ready",() => {
 		audioDownloader.progress = (percent) => progress(`Downloading audio: ${percent.toFixed(2)}%`);
 		videoDownloader.progress = (percent) => progress(`Downloading video: ${percent.toFixed(2)}%`);
 
-		audioDownloader.start();
-		videoDownloader.start();
+		await audioDownloader.start();
+		await videoDownloader.start();
 
-		const ffmpegProcess = spawn("ffmpeg",[
+		const ffmpegProcess = spawn(`${__dirname}/assets/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`,[
 			"-hide_banner",
+			"-loglevel","verbose",
+
 			"-i",`${tempPath}/audio.webm`,
 			"-i",`${tempPath}/video.webm`,
-			/* "-i",`${datas.cover}`, */
-			"-metadata",`title=${datas.title}`,
-			"-metadata",`artist=${datas.channel}`,
-			"-metadata",`creation_date=${datas.publishDate}`,
-			"-c:a","aac",
-			"-c:v","libx264",
+			"-i",`${datas.cover}`,
+
+			"-map","0:a",
+			"-map","1:v",
+			"-map","2:v",
+
+			"-c:a:0","aac",
+			"-c:v:1","h264",
+
+			"-disposition:v:2","attached_pic",
+
 			"-preset","ultrafast",
-			"-crf","30",
+			"-crf","25",
+
 			"-y",
 			`${downloadPath}/${datas.quality}.mp4`
 		]);
@@ -293,8 +305,10 @@ app.on("ready",() => {
 		ffmpegProcess.stdout.on("data",(chunk) => process.stdout.write(chunk));
 		ffmpegProcess.stderr.on("data",(chunk) => process.stderr.write(chunk));
 
+		ffmpegProcess.on("spawn",() => console.log(ffmpegProcess.spawnargs.join(" ")));
 		ffmpegProcess.on("exit",(code) => {
 			if (code === 0) {
+				fs.writeFileSync(`${downloadPath}/info.json`,JSON.stringify(datas),"utf-8");
 				resolve();
 			} else {
 				console.error(`ffmpeg exit with ${code}`);
@@ -307,8 +321,6 @@ app.on("ready",() => {
 		if (fs.existsSync(path)) {
 			const file = JSON.parse(fs.readFileSync(path,"utf-8"));
 
-			console.log(`Cached - expiring ${new Date(file.expireAt).toLocaleString()} - `,file.expireAt);
-
 			if (file.expireAt < Date.now()) {
 				fs.rmSync(path);
 				return "Expired";
@@ -320,7 +332,7 @@ app.on("ready",() => {
 				fs.mkdirSync(path.replace("info.json",""),{recursive: true});
 			} catch {}
 			const datas = await ytdl.getInfo(id,{lang: country});
-			datas.expireAt = Date.now() + datas.player_response.streamingData.expiresInSeconds;
+			datas.expireAt = Date.now() + Number(datas.player_response.streamingData.expiresInSeconds) * 1000;
 			fs.writeFileSync(path,JSON.stringify(datas),"utf-8");
 			return datas;
 		}
