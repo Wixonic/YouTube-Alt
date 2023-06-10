@@ -271,8 +271,8 @@ app.on("ready",() => {
 		audioDownloader.progress = (percent) => progress(`Downloading audio: ${percent.toFixed(2)}%`);
 		videoDownloader.progress = (percent) => progress(`Downloading video: ${percent.toFixed(2)}%`);
 
-		// audioDownloader.start();
-		// videoDownloader.start();
+		audioDownloader.start();
+		videoDownloader.start();
 
 		const ffmpegProcess = spawn("ffmpeg",[
 			"-hide_banner",
@@ -306,6 +306,8 @@ app.on("ready",() => {
 		const path = `${app.getPath("temp")}YouTube Download/ytdl-cache/${id}/info.json`;
 		if (fs.existsSync(path)) {
 			const file = JSON.parse(fs.readFileSync(path,"utf-8"));
+
+			console.log(`Cached - expiring ${new Date(file.expireAt).toLocaleString()} - `,file.expireAt);
 
 			if (file.expireAt < Date.now()) {
 				fs.rmSync(path);
