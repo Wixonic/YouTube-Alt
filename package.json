@@ -7,7 +7,7 @@
 	},
 	"homepage": "https://github.com/Wixonic/YouTube-download#readme",
 	"license": "MIT",
-	"version": "1.0.0-dev-2",
+	"version": "1.0.0-dev-3",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Wixonic/YouTube-download.git"
@@ -34,15 +34,23 @@
 		"productName": "YouTube Download",
 		"mac": {
 			"icon": "./assets/icon.icns",
-			"target": [
-				{
-					"target": "dmg",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				}
-			]
+			"target": [{
+				"target": "dmg",
+				"arch": [
+					"x64",
+					"arm64"
+				]
+			}]
+		},
+		"win": {
+			"icon": "./assets/icon.ico",
+			"target": [{
+				"target": "nsis",
+				"arch": [
+					"x64",
+					"arm64"
+				]
+			}]
 		}
 	}
 }
