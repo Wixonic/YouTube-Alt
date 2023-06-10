@@ -160,65 +160,65 @@ const Pages = {
 							videoElement.addEventListener("error",() => {
 								controls.style.display = "grid";
 								videoElement.innerHTML = `<p><b>This video is unavailable</b></p><p>This may due to:<ul><li>Your network connection</li><li>Your device that doesn't support this quality</li><li>A server error from YouTube</li></ul></p><p>Check your internet connection, try to choose a lower quality, restart the app or try to download the video with mp4.</p>`;
-	
-								if (formats["Audio"]) {
-									videoElement.muted = true;
-									audioElement.type = `audio/${formats["Audio"].container}`;
-									audioElement.src = formats["Audio"].url;
-		
-									downloadButton.addEventListener("click",() => youtube.download({
-										audio: formats["Audio"].url,
-										video: format.url,
-										cover: datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url,
-		
-										title: datas.videoDetails.title,
-										channel: datas.videoDetails.author.name,
-										publishDate: datas.videoDetails.publishDate,
-		
-										id: id,
-										quality: format.id
-									}));
-		
-									const audioSource = actx.createMediaElementSource(audioElement);
-									audioSource.connect(actx.destination);
-		
-									audioElement.addEventListener("play",() => videoElement.play());
-									audioElement.addEventListener("pause",() => videoElement.pause());
-		
-									videoElement.addEventListener("play",() => audioElement.play());
-									videoElement.addEventListener("pause",() => audioElement.pause());
-		
-									audioElement.addEventListener("seeking",() => videoElement.playbackRate = 0);
-									audioElement.addEventListener("seeked",async () => {
-										if (videoElement.readyState < 3) {
-											await new Promise((resolve) => videoElement.addEventListener("canplaythrough",resolve));
-										}
-										videoElement.playbackRate = 1;
-	
-										videoElement.addEventListener("seeking",() => audioElement.playbackRate = 0);
-									});
-								
-									videoElement.addEventListener("seeked",async () => {
-										if (audioElement.readyState < 3) {
-											await new Promise((resolve) => audioElement.addEventListener("canplaythrough",resolve));
-										}
-										audioElement.playbackRate = 1;
-	
-									});
-	
-									const synchronize = () => {
-										if (Math.sqrt(Math.pow(audioElement.currentTime - videoElement.currentTime,2)) > 0.1) {
-											videoElement.currentTime = audioElement.currentTime;
-										}
-									};
-		
-									audioElement.addEventListener("timeupdate",synchronize);
-									videoElement.addEventListener("timeupdate",() => {
-										cursor.style.left = `${videoElement.currentTime / videoElement.duration * 100}%`;
-										synchronize();
-									});
-								}
 							});
+
+							if (formats["Audio"]) {
+								videoElement.muted = true;
+								audioElement.type = `audio/${formats["Audio"].container}`;
+								audioElement.src = formats["Audio"].url;
+								
+								downloadButton.addEventListener("click",() => youtube.download({
+									audio: formats["Audio"].url,
+									video: format.url,
+									cover: datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url,
+	
+									title: datas.videoDetails.title,
+									channel: datas.videoDetails.author.name,
+									publishDate: datas.videoDetails.publishDate,
+	
+									id: id,
+									quality: format.id
+								}));
+	
+								const audioSource = actx.createMediaElementSource(audioElement);
+								audioSource.connect(actx.destination);
+	
+								audioElement.addEventListener("play",() => videoElement.play());
+								audioElement.addEventListener("pause",() => videoElement.pause());
+	
+								videoElement.addEventListener("play",() => audioElement.play());
+								videoElement.addEventListener("pause",() => audioElement.pause());
+	
+								audioElement.addEventListener("seeking",() => videoElement.playbackRate = 0);
+								audioElement.addEventListener("seeked",async () => {
+									if (videoElement.readyState < 3) {
+										await new Promise((resolve) => videoElement.addEventListener("canplaythrough",resolve));
+									}
+									videoElement.playbackRate = 1;
+
+									videoElement.addEventListener("seeking",() => audioElement.playbackRate = 0);
+								});
+							
+								videoElement.addEventListener("seeked",async () => {
+									if (audioElement.readyState < 3) {
+										await new Promise((resolve) => audioElement.addEventListener("canplaythrough",resolve));
+									}
+									audioElement.playbackRate = 1;
+
+								});
+
+								const synchronize = () => {
+									if (Math.sqrt(Math.pow(audioElement.currentTime - videoElement.currentTime,2)) > 0.1) {
+										videoElement.currentTime = audioElement.currentTime;
+									}
+								};
+	
+								audioElement.addEventListener("timeupdate",synchronize);
+								videoElement.addEventListener("timeupdate",() => {
+									cursor.style.left = `${videoElement.currentTime / videoElement.duration * 100}%`;
+									synchronize();
+								});
+							}
 						};
 	
 						const audioElement = document.createElement("audio");
@@ -237,6 +237,7 @@ const Pages = {
 						const downloadButton = document.createElement("button");
 	
 						downloadButton.innerHTML = "Download";
+						videoElement.preload = "auto";
 	
 						player.classList.add("player");
 						controls.classList.add("controls");
@@ -250,8 +251,6 @@ const Pages = {
 						info.classList.add("info");
 						author.classList.add("author");
 						downloadButton.classList.add("download");
-	
-						videoElement.preload = "auto";
 	
 						controls.addEventListener("mousenter",() => controls.classList.add("visible"));
 						controls.addEventListener("mousemove",() => {
