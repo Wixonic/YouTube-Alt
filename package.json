@@ -1,5 +1,6 @@
 {
 	"name": "youtube-alt",
+	"description": "An alternative client of YouTube.",
 	"author": "Wixonic <contact@wixonic.fr> (https://wixonic.fr)",
 	"bugs": {
 		"url": "https://github.com/Wixonic/YouTube-Alt/issues",
@@ -7,7 +8,7 @@
 	},
 	"homepage": "https://github.com/Wixonic/YouTube-Alt#readme",
 	"license": "MIT",
-	"version": "1.0.0-dev-4",
+	"version": "1.0.0-dev-5",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Wixonic/YouTube-Alt.git"
@@ -15,7 +16,7 @@
 	"main": "app.js",
 	"scripts": {
 		"start": "electron .",
-		"build": "electron-builder build"
+		"build": "electron-builder build --mac --win"
 	},
 	"engines": {
 		"node": ">=16.x.x"
@@ -30,8 +31,20 @@
 	},
 	"build": {
 		"appId": "fr.wixonic.youtube-alt",
+		"artifactName": "${name}.v${version}.${os}.${arch}.${ext}",
+		"executableName": "YouTube Alt",
 		"productName": "YouTube Alt",
+		
 		"mac": {
+			"files": [
+				"assets/**",
+				"!assets/ffmpeg.exe",
+				"!assets/icon.ico",
+				"node_modules/**",
+				"pages/**",
+				"app.js",
+				"config.json"
+			],
 			"icon": "./assets/icon.icns",
 			"target": [
 				{
@@ -43,7 +56,17 @@
 				}
 			]
 		},
+
 		"win": {
+			"files": [
+				"assets/**",
+				"!assets/ffmpeg",
+				"!assets/icon.icns",
+				"node_modules/**",
+				"pages/**",
+				"app.js",
+				"config.json"
+			],
 			"icon": "./assets/icon.ico",
 			"target": [
 				{
