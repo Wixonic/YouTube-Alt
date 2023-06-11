@@ -2,7 +2,7 @@
 
 ## For now, this app is only available to selected "Beta Users" due to Google OAUTH2 restrictions
 
-> An alternative client of YouTube website
+> An alternative client of YouTube
 
 [![Last Release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Version)](https://github.com/Wixonic/YouTube-Alt/releases)
 
