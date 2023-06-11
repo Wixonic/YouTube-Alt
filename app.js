@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 const DiscordRPC = require("discord-rpc");
 const dns = require("dns");
-const { app, BrowserWindow, dialog, ipcMain, nativeTheme } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, nativeTheme, Notification } = require("electron");
 const fs = require("fs");
 const https = require("https");
 const ytdl = require("ytdl-core");
@@ -139,7 +139,7 @@ const launch = () => {
 					res.on("data",(chunk) => res.datas += chunk);
 					res.on("end",() => {
 						res.datas = JSON.parse(res.datas);
-						setTimeout(refreshToken,Number(res.datas.expires_in) * 1000);
+						refreshToken.when = Date.now() + Number(res.datas.expires_in) * 1000;
 					});
 				} else {
 					fs.rmSync(`${app.getPath("appData")}/Youtube Download/token`,{
@@ -296,7 +296,7 @@ app.on("ready",() => {
 			"-disposition:v:2","attached_pic",
 
 			"-preset","ultrafast",
-			"-crf","25",
+			"-crf","30",
 
 			"-y",
 			`${downloadPath}/${datas.quality}.mp4`
@@ -309,6 +309,13 @@ app.on("ready",() => {
 		ffmpegProcess.on("exit",(code) => {
 			if (code === 0) {
 				fs.writeFileSync(`${downloadPath}/info.json`,JSON.stringify(datas),"utf-8");
+				const endNotification = new Notification({
+					title: "Video downloaded",
+					body: `Successfully downloaded "${datas.title}" by ${datas.channel}`,
+					icon: datas.cover,
+					urgency: "low"
+				});
+				endNotification.show();
 				resolve();
 			} else {
 				console.error(`ffmpeg exit with ${code}`);
@@ -328,6 +335,10 @@ app.on("ready",() => {
 				return file;
 			}
 		} else {
+			if (refreshToken.when < Date.now()) {
+				await refreshToken();
+			}
+
 			try {
 				fs.mkdirSync(path.replace("info.json",""),{recursive: true});
 			} catch {}
@@ -338,7 +349,11 @@ app.on("ready",() => {
 		}
 	});
 
-	ipcMain.handle("youtube:request",(_,endpoint="/") => new Promise((resolve) => {
+	ipcMain.handle("youtube:request",(_,endpoint="/") => new Promise(async (resolve) => {
+		if (refreshToken.when < Date.now()) {
+			await refreshToken();
+		}
+
 		https.request(`https://youtube.googleapis.com/v3${endpoint}`,{
 			headers: {
 				"Authorization": `Bearer ${config.token}`
