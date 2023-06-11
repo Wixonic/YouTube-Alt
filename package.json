@@ -1,16 +1,16 @@
 {
-	"name": "youtube-download",
+	"name": "youtube-alt",
 	"author": "Wixonic <contact@wixonic.fr> (https://wixonic.fr)",
 	"bugs": {
-		"url": "https://github.com/Wixonic/YouTube-download/issues",
+		"url": "https://github.com/Wixonic/YouTube-Alt/issues",
 		"email": "contact@wixonic.fr"
 	},
-	"homepage": "https://github.com/Wixonic/YouTube-download#readme",
+	"homepage": "https://github.com/Wixonic/YouTube-Alt#readme",
 	"license": "MIT",
 	"version": "1.0.0-dev-4",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/Wixonic/YouTube-download.git"
+		"url": "git+https://github.com/Wixonic/YouTube-Alt.git"
 	},
 	"main": "app.js",
 	"scripts": {
@@ -29,8 +29,8 @@
 		"electron-builder": "^23.6.0"
 	},
 	"build": {
-		"appId": "fr.wixonic.youtube-download",
-		"productName": "YouTube Download",
+		"appId": "fr.wixonic.youtube-alt",
+		"productName": "YouTube Alt",
 		"mac": {
 			"icon": "./assets/icon.icns",
 			"target": [

@@ -59,7 +59,7 @@ const refreshToken = () => new Promise((resolve) => {
 				backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
 				minHeight: 400,
 				minWidth: 400,
-				title: "YouTube Downloader",
+				title: "YouTube Alt",
 				webPreferences: {
 					preload: `${__dirname}/pages/offline/preload.js`
 				}
@@ -153,7 +153,7 @@ const launch = () => {
 					backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
 					minHeight: 400,
 					minWidth: 400,
-					title: "YouTube Downloader",
+					title: "YouTube Alt",
 					webPreferences: {
 						preload: `${__dirname}/pages/online/preload.js`
 					}
@@ -166,7 +166,7 @@ const launch = () => {
 				backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
 				minHeight: 400,
 				minWidth: 400,
-				title: "YouTube Downloader",
+				title: "YouTube Alt",
 				webPreferences: {
 					preload: `${__dirname}/pages/offline/preload.js`
 				}
@@ -256,8 +256,8 @@ app.on("ready",() => {
 			};
 		};
 		
-		const tempPath = `${app.getPath("temp")}YouTube Download/downloads/${datas.id}-${datas.quality}`;
-		const downloadPath = `${app.getPath("documents")}/YouTube Download/downloads/${datas.id}`;
+		const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.id}-${datas.quality}`;
+		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.id}`;
 
 		if (!fs.existsSync(tempPath)) {
 			fs.mkdirSync(tempPath,{recursive: true});
@@ -324,7 +324,7 @@ app.on("ready",() => {
 	}));
 
 	ipcMain.handle("youtube:info",async (_,id,country="EN") => {
-		const path = `${app.getPath("temp")}YouTube Download/ytdl-cache/${id}/info.json`;
+		const path = `${app.getPath("temp")}YouTube Alt/ytdl-cache/${id}/info.json`;
 		if (fs.existsSync(path)) {
 			const file = JSON.parse(fs.readFileSync(path,"utf-8"));
 
