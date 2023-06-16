@@ -16,7 +16,7 @@
 	"main": "app.js",
 	"scripts": {
 		"start": "electron .",
-		"build": "electron-builder build --mac --win"
+		"build": "electron-builder build --mac --win --x64"
 	},
 	"engines": {
 		"node": ">=16.x.x"
@@ -31,7 +31,7 @@
 	},
 	"build": {
 		"appId": "fr.wixonic.youtube-alt",
-		"artifactName": "${name}.v${version}.${os}.${arch}.${ext}",
+		"artifactName": "${name}.v${version}.${os}.${ext}",
 		"executableName": "YouTube Alt",
 		"productName": "YouTube Alt",
 		
@@ -46,15 +46,7 @@
 				"config.json"
 			],
 			"icon": "./assets/icon.icns",
-			"target": [
-				{
-					"target": "dmg",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				}
-			]
+			"target": "dmg"
 		},
 
 		"win": {
@@ -68,15 +60,7 @@
 				"config.json"
 			],
 			"icon": "./assets/icon.ico",
-			"target": [
-				{
-					"target": "nsis",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				}
-			]
+			"target": "nsis"
 		}
 	}
 }
