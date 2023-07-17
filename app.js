@@ -8,6 +8,8 @@ const ytdl = require("ytdl-core");
 
 const config = require("./config.json");
 
+app.startTimestamp = new Date();
+
 const refreshToken = () => new Promise((resolve) => {
 	dns.resolve4("wixonic.fr",async (error) => {
 		if (!error) { // isOffline
@@ -178,6 +180,39 @@ const launch = () => {
 };
 
 app.on("ready",() => {
+	app.rpc = new DiscordRPC.Client({transport: "ipc"});
+	app.rpc.login({clientId: "1130539590026002464"})
+	.then(() => {
+		app.rpc.reset = () => app.rpc.setActivity({
+			largeImageKey: "icon",
+			largeImageText: "YouTube Alt",
+			startTimestamp: app.startTimestamp
+		});
+
+		ipcMain.handle("discord:rpc",(_,datas) => {
+			if (app.rpc) {
+				if (datas) {
+					app.rpc.setActivity({
+						details: datas.details,
+						largeImageKey: datas.largeImageKey || "icon",
+						largeImageText: datas.largeImageText || "YouTube Alt",
+						smallImageKey: datas.largeImageKey ? "icon" : undefined,
+						smallImageText: datas.largeImageKey ? "YouTube Alt" : undefined,
+						startTimestamp: app.startTimestamp,
+						state: datas.state
+					});
+				} else {
+					app.rpc.reset();
+				}
+			}
+		});
+
+		app.rpc.reset();
+	}).catch((e) => {
+		console.error(e);
+		ipcMain.handle("discord:rpc",() => null);
+	});
+
 	ipcMain.handle("youtube:download",(_,datas) => new Promise(async (resolve,reject) => {
 		class Downloader {
 			constructor (path,url) {

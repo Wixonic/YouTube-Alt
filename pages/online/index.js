@@ -10,9 +10,15 @@ const Pages = {
 
 	list: {
 		downloads: () => {
-			
+			discord.rpc({
+				details: "Scrolling on downloads page"
+			});
 		},
 		home: () => {
+			discord.rpc({
+				details: "Scrolling on homepage"
+			});
+
 			youtube.request(`/videos?chart=mostPopular${channels && channels.length > currentChannel && channels[currentChannel]?.snippet?.country ? "&regionCode=" + channels[currentChannel].snippet.country : ""}&maxResults=50&fields=items(id)`)
 			.then((videos) => {
 				for (let video of videos.datas.items) {
@@ -46,6 +52,10 @@ const Pages = {
 		search: (query="") => {
 			youtube.request(`/search?q=${encodeURIComponent(query)}&part=snippet${channels && channels.length > currentChannel && channels[currentChannel]?.snippet?.country ? "&regionCode=" + channels[currentChannel].snippet.country : ""}&type=channel,video&maxResults=50&fields=items(id,snippet(title,description,channelTitle,channelId,thumbnails(high(url),maxres(url))))`)
 			.then(async (results) => {
+				discord.rpc({
+					details: "Searching"
+				});
+
 				for (let result of results.datas.items) {
 					const append = (html="") => {
 						const resultEl = document.createElement("div");
@@ -112,6 +122,11 @@ const Pages = {
 		video: (id,downloaded=false) => {
 			(downloaded ? downloads.info(id) : youtube.info(id,channels && channels.length > currentChannel ? channels[currentChannel]?.snippet?.country : null))
 			.then((datas) => {
+				discord.rpc({
+					details: `Watching videos`,
+					state: `${datas.videoDetails.author.name} - ${datas.videoDetails.title}`
+				});
+
 				if (downloaded) {
 
 				} else {
