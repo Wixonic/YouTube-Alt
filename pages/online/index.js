@@ -9,116 +9,6 @@ const Pages = {
 	},
 
 	list: {
-		downloads: () => {
-			discord.rpc({
-				details: "Scrolling on downloads page"
-			});
-		},
-		home: () => {
-			discord.rpc({
-				details: "Scrolling on homepage"
-			});
-
-			youtube.request(`/videos?chart=mostPopular${channels && channels.length > currentChannel && channels[currentChannel]?.snippet?.country ? "&regionCode=" + channels[currentChannel].snippet.country : ""}&maxResults=50&fields=items(id)`)
-			.then((videos) => {
-				for (let video of videos.datas.items) {
-					const append = (html="") => {
-						const videoEl = document.createElement("div");
-						videoEl.classList.add("video");
-						videoEl.id = video.id;
-						videoEl.addEventListener("click",() => Pages.set("video",video.id));
-						videoEl.innerHTML = html;
-						document.querySelector("div.main").append(videoEl);
-					};
-
-					const displayInfos = () => {
-						youtube.info(video.id,channels && channels.length > currentChannel ? channels[currentChannel]?.snippet?.country : null)
-						.then((datas) => {
-							if (datas === "Expired") {
-								displayInfos();
-							} else {
-								append(`<div class="title">${datas.videoDetails.title}</div><img class="thumbnail" src="${datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url}" /><div class="channel"><img class="logo" src="${datas.videoDetails.author.thumbnails[datas.videoDetails.author.thumbnails.length - 1].url}" /><div class="title">${datas.videoDetails.author.name}</div></div>`);
-							}
-						}).catch((e) => {
-							append(`Failed to fetch info of <i>${video.id}</i>`);
-							console.error(e);
-						});
-					};
-
-					displayInfos();
-				}
-			}).catch((e) => Pages.utils.error("Failed to fetch homepage",e));
-		},
-		search: (query="") => {
-			youtube.request(`/search?q=${encodeURIComponent(query)}&part=snippet${channels && channels.length > currentChannel && channels[currentChannel]?.snippet?.country ? "&regionCode=" + channels[currentChannel].snippet.country : ""}&type=channel,video&maxResults=50&fields=items(id,snippet(title,description,channelTitle,channelId,thumbnails(high(url),maxres(url))))`)
-			.then(async (results) => {
-				discord.rpc({
-					details: "Searching"
-				});
-
-				for (let result of results.datas.items) {
-					const append = (html="") => {
-						const resultEl = document.createElement("div");
-						resultEl.classList.add("result",{"youtube#channel": "channel","youtube#video": "video"}[result.id.kind]);
-						resultEl.id = result.id.channelId || result.id.videoId || "unknow";
-						resultEl.addEventListener("click",() => {
-							switch (result.id.kind) {
-								case "youtube#channel":
-									Pages.set("channel",result.id.channelId);
-									break;
-								
-								case "youtube#video":
-									Pages.set("video",result.id.videoId);
-									break;
-							}
-						});
-						resultEl.innerHTML = html;
-						document.querySelector("div.main").append(resultEl);
-					};
-
-					switch (result.id.kind) {
-						case "youtube#channel":
-							await new Promise((resolve) => {
-								youtube.request(`/channels?id=${result.id.channelId}&part=snippet,statistics${channels && channels.length > currentChannel && channels[currentChannel]?.snippet?.country ? "&regionCode=" + channels[currentChannel].snippet.country : ""}&maxResults=1&fields=items(snippet(title,description,customUrl,thumbnails(high(url),maxres(url))),statistics(subscriberCount,hiddenSubscriberCount,videoCount))`)
-								.then((channel) => {
-									append(`<div class="title">${channel.datas.items[0].snippet.title}</div><div class="description">${channel.datas.items[0].snippet.description}</div><div class="statistics">${channel.datas.items[0].statistics.hiddenSubscriberCount ? "" : `<div class="subscribers">${channel.datas.items[0].statistics.subscriberCount} followers</div>`}<div class="videos">${channel.datas.items[0].statistics.videoCount} video${channel.datas.items[0].statistics.videoCount > 1 ? "s" : ""}</div></div><img class="thumbnail" src="${Object.values(channel.datas.items[0].snippet.thumbnails)[Object.values(channel.datas.items[0].snippet.thumbnails).length - 1].url}" />`);
-									resolve();
-								}).catch((e) => {
-									append(`Failed to fetch info of channel <i>${result.id.channelId}</i>`);
-									console.error(e);
-									resolve();
-								});
-							});
-							break;
-						
-						case "youtube#video":
-							const displayInfos = () => new Promise(async (resolve) => {
-								youtube.info(result.id.videoId,channels && channels.length > currentChannel ? channels[currentChannel]?.snippet?.country : null)
-								.then(async (datas) => {
-									if (datas === "Expired") {
-										await displayInfos();
-										resolve();
-									} else {
-										append(`<div class="title">${datas.videoDetails.title}</div><img class="thumbnail" src="${datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url}" /><div class="channel"><img class="logo" src="${datas.videoDetails.author.thumbnails[datas.videoDetails.author.thumbnails.length - 1].url}" /><div class="title">${datas.videoDetails.author.name}</div></div>`);
-										resolve();
-									}
-								}).catch((e) => {
-									append(`Failed to fetch info of video <i>${result.id.videoId}</i>`);
-									console.error(e);
-									resolve();
-								});
-							});
-		
-							await displayInfos();
-							break;
-						
-						default:
-							append(`Failed to display: Unknow kind of result: ${result.id.kind}`);
-							break;
-					}
-				}
-			}).catch((e) => Pages.utils.error(`Failed to search <i>${query}</i>`,e));
-		},
 		video: (id,downloaded=false) => {
 			(downloaded ? downloads.info(id) : youtube.info(id,channels && channels.length > currentChannel ? channels[currentChannel]?.snippet?.country : null))
 			.then((datas) => {
@@ -128,7 +18,7 @@ const Pages = {
 				});
 
 				if (downloaded) {
-
+					Pages.list.video(id);
 				} else {
 					if (datas === "Expired") {
 						Pages.list.video(id);
@@ -257,9 +147,7 @@ const Pages = {
 						fullscreenButton.innerHTML = `<div class="off"><!--! Font Awesome Pro 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 512 512"><path d="M136 64c13.3 0 24 10.7 24 24s-10.7 24-24 24H48v88c0 13.3-10.7 24-24 24s-24-10.7-24-24V88C0 74.7 10.7 64 24 64H136zM0 312c0-13.3 10.7-24 24-24s24 10.7 24 24v88h88c13.3 0 24 10.7 24 24s-10.7 24-24 24H24c-13.3 0-24-10.7-24-24V312zM488 64c13.3 0 24 10.7 24 24V200c0 13.3-10.7 24-24 24s-24-10.7-24-24V112H376c-13.3 0-24-10.7-24-24s10.7-24 24-24H488zM464 312c0-13.3 10.7-24 24-24s24 10.7 24 24V424c0 13.3-10.7 24-24 24H376c-13.3 0-24-10.7-24-24s10.7-24 24-24h88V312z"/></svg></div>
 						                              <div class="on"><!--! Font Awesome Pro 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 512 512"><path d="M160 88c0-13.3-10.7-24-24-24s-24 10.7-24 24v88H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H136c13.3 0 24-10.7 24-24V88zM24 288c-13.3 0-24 10.7-24 24s10.7 24 24 24h88v88c0 13.3 10.7 24 24 24s24-10.7 24-24V312c0-13.3-10.7-24-24-24H24zM400 88c0-13.3-10.7-24-24-24s-24 10.7-24 24V200c0 13.3 10.7 24 24 24H488c13.3 0 24-10.7 24-24s-10.7-24-24-24H400V88zM376 288c-13.3 0-24 10.7-24 24V424c0 13.3 10.7 24 24 24s24-10.7 24-24V336h88c13.3 0 24-10.7 24-24s-10.7-24-24-24H376z"/></svg></div>`;
 						downloadButton.innerHTML = `<!--! Font Awesome Pro 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 384 512"><path d="M342.1 249.9L219.3 372.7c-7.2 7.2-17.1 11.3-27.3 11.3s-20.1-4.1-27.3-11.3L41.9 249.9c-6.4-6.4-9.9-15-9.9-24C32 207.2 47.2 192 65.9 192l62.1 0 0-128c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32V192l62.1 0c18.7 0 33.9 15.2 33.9 33.9c0 9-3.6 17.6-9.9 24zM32 416H352c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></svg>`;
-
-						videoElement.preload = "auto";
-	
+						
 						player.classList.add("player");
 						controls.classList.add("controls");
 						statusButton.classList.add("status");
@@ -382,6 +270,7 @@ addEventListener("DOMContentLoaded",() => {
 			}
 		});
 
-		Pages.set();
+		// Pages.set();
+		Pages.set("video","https://www.youtube.com/watch?v=fhtDnpczHM8");
 	}).catch((e) => Pages.utils.error("Failed to fetch user's datas",e));
 });
