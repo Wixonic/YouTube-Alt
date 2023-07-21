@@ -16,7 +16,7 @@
 	"main": "app.js",
 	"scripts": {
 		"start": "electron .",
-		"build": "electron-builder build --mac --win --x64"
+		"build": "electron-builder build --mac --win --x64 -c.mac.identity=null"
 	},
 	"engines": {
 		"node": ">=16.x.x"
