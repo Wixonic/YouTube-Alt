@@ -211,12 +211,6 @@ div.main[page="video"]>div.player>div.controls.visible {
 	transition: opacity 0.1s linear;
 }
 
-@keyframes rotate {
-	to {
-		transform: rotate(360deg);
-	}
-}
-
 div.main[page="video"]>div.player>div.controls>div.loader {
 	grid-row: 2;
 	grid-column: 1 / 7;
@@ -244,29 +238,30 @@ div.main[page="video"]>div.player>div.controls>div.loader>svg {
 }
 
 div.main[page="video"]>div.player>div.controls>button,
+div.main[page="video"]>div.player>div.controls>div.window,
 div.main[page="video"]>div.player>div.controls>div.timeline {
 	background: rgba(128, 128, 128, 0.4);
 	backdrop-filter: blur(0.15rem);
+
+	color: #FFF;
 }
 
 div.main[page="video"]>div.player>div.controls>button {
-	color: #FFF;
-
 	border: none;
 	border-radius: 0.2rem;
+}
+
+div.main[page="video"]>div.player>div.controls>button:not(.enabled)>div.on {
+	display: none;
+}
+
+div.main[page="video"]>div.player>div.controls>button.enabled>div.off {
+	display: none;
 }
 
 div.main[page="video"]>div.player>div.controls>button.status {
 	grid-row: 3;
 	grid-column: 1;
-}
-
-div.main[page="video"]>div.player>div.controls>button.status:not(.playing)>div.on {
-	display: none;
-}
-
-div.main[page="video"]>div.player>div.controls>button.status.playing>div.off {
-	display: none;
 }
 
 div.main[page="video"]>div.player>div.controls>button.settings {
@@ -279,17 +274,13 @@ div.main[page="video"]>div.player>div.controls>button.pip {
 	grid-column: 4;
 }
 
-div.main[page="video"]>div.player>div.controls>button.pip:not(.enabled)>div.on {
-	display: none;
-}
-
-div.main[page="video"]>div.player>div.controls>button.pip.enabled>div.off {
-	display: none;
-}
-
 div.main[page="video"]>div.player>div.controls>button.download {
 	grid-row: 3;
 	grid-column: 5;
+}
+
+div.main[page="video"]>div.player>div.controls>button.download>div.on {
+	animation: rotate 1.8s infinite linear;
 }
 
 div.main[page="video"]>div.player>div.controls>button.fullscreen {
@@ -297,12 +288,117 @@ div.main[page="video"]>div.player>div.controls>button.fullscreen {
 	grid-column: 6;
 }
 
-div.main[page="video"]>div.player>div.controls>button.fullscreen:not(.enabled)>div.on {
+div.main[page="video"]>div.player>div.controls>div.window {
 	display: none;
+	grid-auto-rows: auto;
+	grid-template-columns: auto;
+	grid-auto-flow: row dense;
+
+	position: absolute;
+	right: 0.25rem;
+	bottom: 2rem;
+
+	width: min(calc(100% - 0.5rem), 20rem);
+	max-height: min(calc(100% - 2.25rem), 25rem);
+
+	background: rgba(50, 50, 50, 0.6);
+	border-radius: 0.4rem;
 }
 
-div.main[page="video"]>div.player>div.controls>button.fullscreen.enabled>div.off {
-	display: none;
+/* div.main[page="video"]>div.player>div.controls>div.window>div.title {} */
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format {
+	display: grid;
+	grid-template-rows: auto;
+	grid-template-columns: 2rem 1fr auto 1fr 2rem;
+
+	height: 2rem;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.selected-icon,
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.container,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format>div.container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 100%;
+	height: 100%;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.selected-icon {
+	grid-column: 1;
+
+	opacity: 0;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format.selected>div.selected-icon,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format.selected>div.selected-icon {
+	opacity: 1;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.quality,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format>div.quality {
+	grid-column: 2;
+
+	display: flex;
+	justify-content: left;
+	align-items: center;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.quality>div.separator,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format>div.quality>div.separator {
+	opacity: 0.3;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.quality>div.fps,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format>div.quality>div.fps {
+	color: #F22;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.bitrate,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format>div.bitrate {
+	grid-column: 4;
+
+	display: flex;
+	justify-content: right;
+	align-items: center;
+
+	font-size: 0.5rem;
+
+	opacity: 0.4;
+
+	padding: 0 0.5rem;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.settings>div.format>div.container,
+div.main[page="video"]>div.player>div.controls>div.window.download>div.format>div.container {
+	grid-column: 5;
+
+	height: 1.75rem;
+
+	background: rgba(128, 128, 128, 0.5);
+
+	font-size: 0.5rem;
+	font-weight: 500;
+	text-transform: uppercase;
+
+	border-radius: 0.2rem;
+
+	opacity: 0.4;
+
+	margin: auto;
+}
+
+div.main[page="video"]>div.player>div.controls>div.window.visible {
+	display: grid;
+
+	overflow: hidden scroll;
+}
+
+div.main[page="video"]>div.player:fullscreen>div.controls>div.window {
+	max-height: min(calc(100% - 4.5rem), 20rem);
 }
 
 div.main[page="video"]>div.player>div.controls>div.timeline {
@@ -321,7 +417,7 @@ div.main[page="video"]>div.player>div.controls>div.timeline {
 }
 
 div.main[page="video"]>div.player>div.controls>div.timeline>div.timelineCursor {
-	position: relative;
+	position: absolute;
 	left: 0;
 	top: 0;
 
@@ -332,7 +428,7 @@ div.main[page="video"]>div.player>div.controls>div.timeline>div.timelineCursor {
 }
 
 div.main[page="video"]>div.player>div.controls>div.timeline>div.loadedTimeline {
-	position: relative;
+	position: absolute;
 	left: 0;
 	top: 0;
 
@@ -342,6 +438,7 @@ div.main[page="video"]>div.player>div.controls>div.timeline>div.loadedTimeline {
 	background: #000;
 }
 
+
 @media (min-width: 40rem) {
 	div.main[page="video"]>div.player {
 		max-width: calc(100vw - 10rem);
@@ -349,5 +446,12 @@ div.main[page="video"]>div.player>div.controls>div.timeline>div.loadedTimeline {
 
 	div.main[page="video"]>div.player>video {
 		border-radius: 0.35rem;
+	}
+}
+
+
+@keyframes rotate {
+	to {
+		transform: rotate(360deg);
 	}
 }

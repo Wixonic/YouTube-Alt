@@ -12,7 +12,7 @@ app.startTimestamp = new Date();
 
 const refreshToken = () => new Promise((resolve) => {
 	dns.resolve4("wixonic.fr", async (error) => {
-		if (!error) { // isOffline
+		if (!error) { // isOnline
 			const window = new BrowserWindow({
 				backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
 				minHeight: 400,
@@ -77,9 +77,8 @@ const launch = () => {
 		if (!error) { // isOnline
 			if (!config.token) {
 				config.token = await new Promise(async (resolve) => {
-					if (fs.existsSync(`${app.getPath("appData")}/Youtube Download/token`)) {
-						resolve(fs.readFileSync(`${app.getPath("appData")}/Youtube Download/token`, "utf-8"));
-					} else {
+					if (fs.existsSync(`${app.getPath("appData")}/Youtube Download/token`)) resolve(fs.readFileSync(`${app.getPath("appData")}/Youtube Download/token`, "utf-8"));
+					else {
 						const window = new BrowserWindow({
 							backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
 							minHeight: 400,
@@ -201,9 +200,7 @@ app.on("ready", () => {
 							startTimestamp: app.startTimestamp,
 							state: datas.state
 						});
-					} else {
-						app.rpc.reset();
-					}
+					} else app.rpc.reset();
 				}
 			});
 
@@ -248,9 +245,7 @@ app.on("ready", () => {
 									});
 									res.on("error", (e) => reject(e));
 									resolve(res);
-								} else {
-									reject(res.statusCode);
-								}
+								} else reject(res.statusCode);
 							});
 						});
 					};
@@ -275,9 +270,7 @@ app.on("ready", () => {
 										this.progress(this.percent);
 										await new Promise((resolve) => res.on("end", resolve));
 									} catch {
-										if (download.retries < 5) {
-											reject(`Failed to download part ${start}-${end}`)
-										}
+										if (download.retries < 5) reject(`Failed to download part ${start}-${end}`)
 									}
 								};
 
@@ -290,16 +283,11 @@ app.on("ready", () => {
 					};
 				};
 
-				const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.id}-${datas.quality}`;
-				const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.id}`;
+				const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.videoId}-${datas.quality}`;
+				const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.videoId}`;
 
-				if (!fs.existsSync(tempPath)) {
-					fs.mkdirSync(tempPath, { recursive: true });
-				}
-
-				if (!fs.existsSync(downloadPath)) {
-					fs.mkdirSync(downloadPath, { recursive: true });
-				}
+				if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
+				if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath, { recursive: true });
 
 				const progress = (log) => console.log((new Date()).toISOString(), log);
 
@@ -333,7 +321,7 @@ app.on("ready", () => {
 					"-crf", "30",
 
 					"-y",
-					`${downloadPath}/${datas.quality}.mp4`
+					`${downloadPath}/${datas.formatId}.mp4`
 				]);
 
 				ffmpegProcess.stdout.on("data", (chunk) => process.stdout.write(chunk));
@@ -351,9 +339,7 @@ app.on("ready", () => {
 						});
 						endNotification.show();
 						resolve();
-					} else {
-						console.error(`ffmpeg exit with ${code}`);
-					}
+					} else console.error(`ffmpeg exit with ${code}`);
 				});
 			}));
 
@@ -365,13 +351,9 @@ app.on("ready", () => {
 					if (file.expireAt < Date.now()) {
 						fs.rmSync(path);
 						return "Expired";
-					} else {
-						return file;
-					}
+					} else return file;
 				} else {
-					if (refreshToken.when < Date.now()) {
-						await refreshToken();
-					}
+					if (refreshToken.when < Date.now()) await refreshToken();
 
 					try {
 						fs.mkdirSync(path.replace("info.json", ""), { recursive: true });
@@ -384,9 +366,7 @@ app.on("ready", () => {
 			});
 
 			ipcMain.handle("youtube:request", (_, endpoint = "/") => new Promise(async (resolve) => {
-				if (refreshToken.when < Date.now()) {
-					await refreshToken();
-				}
+				if (refreshToken.when < Date.now()) await refreshToken();
 
 				https.request(`https://youtube.googleapis.com/v3${endpoint}`, {
 					headers: {
@@ -401,9 +381,7 @@ app.on("ready", () => {
 						if (res.status === 401 && res.datas.error.status === "UNAUTHENTICATED") {
 							BrowserWindow.getAllWindows().forEach((window) => window.destroy());
 							launch();
-						} else {
-							resolve({ status: { code: res.statusCode, message: res.statusMessage }, datas: res.datas });
-						}
+						} else resolve({ status: { code: res.statusCode, message: res.statusMessage }, datas: res.datas });
 					});
 				}).end();
 			}));
@@ -412,14 +390,10 @@ app.on("ready", () => {
 		});
 
 	app.on("activate", () => {
-		if (BrowserWindow.getAllWindows().length === 0) {
-			launch();
-		}
+		if (BrowserWindow.getAllWindows().length === 0) launch();
 	})
 });
 
 app.on("window-all-closed", () => {
-	if (process.platform !== "darwin") {
-		app.quit();
-	}
+	if (process.platform !== "darwin") app.quit();
 });
