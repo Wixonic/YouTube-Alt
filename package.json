@@ -8,7 +8,7 @@
 	},
 	"homepage": "https://github.com/Wixonic/YouTube-Alt#readme",
 	"license": "MIT",
-	"version": "0.6.1",
+	"version": "0.6.3",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Wixonic/YouTube-Alt.git"
@@ -16,6 +16,7 @@
 	"main": "app.js",
 	"scripts": {
 		"start": "electron .",
+		"clear": "rm -rf dist; clear",
 		"build": "electron-builder build --mac --win --x64 -c.mac.identity=null"
 	},
 	"engines": {
