@@ -11,11 +11,11 @@ const Pages = {
 	list: {
 		video: (id, downloaded = false) => {
 			(downloaded ? downloads.info(id) : youtube.info(id, channels && channels.length > currentChannel ? channels[currentChannel]?.snippet?.country : null))
-				.then((datas) => {
-					discord.rpc({
+				.then(async (datas) => {
+					/* discord.rpc({
 						details: `Watching videos`,
 						state: `${datas.videoDetails.author.name} - ${datas.videoDetails.title}`
-					});
+					}); */
 
 					if (downloaded) Pages.list.video(id);
 					else {
@@ -25,9 +25,7 @@ const Pages = {
 							for (let format of datas.formats) {
 								const id = format.hasVideo ? `${Math.min(format.width, format.height)}p${format.fps}` : "Audio";
 								if (!formats[id] && (format.container === "mp4" || format.container === "webm") && format.projectionType === "RECTANGULAR" && !format.isLive) {
-									let bitrate = format.bitrate / Number(format.approxDurationMs) * 1000 * format.fps;
-
-									console.log(format, bitrate);
+									let bitrate = format.averageBitrate / 8;
 
 									switch (true) {
 										case bitrate > 10 ** 6:
@@ -63,7 +61,9 @@ const Pages = {
 										id,
 										hasAudio: format.hasAudio,
 										hasVideo: format.hasVideo,
+										intBitrate: format.averageBitrate / 8,
 										size: Number(format.contentLength),
+										type: format.mimeType,
 										url: format.url,
 										width: format.width
 									};
@@ -74,16 +74,123 @@ const Pages = {
 							formats.videoList = formats.list.filter((format) => format.hasVideo);
 							formats.videoList.sort((a, b) => (a.height == b.height ? (a.width == b.width ? (a.fps == b.fps ? a.hasAudio && !b.hasAudio : a.fps > b.fps) : a.width > b.width) : a.height > b.height) ? -1 : 1);
 
-							const player = document.createElement("div");
-							player.load = async (format) => {
-								const previousTime = videoElement.currentTime;
+							window.player = document.createElement("div");
+							player.threadId = 0;
+							player.load = (format) => {
+								for (let x = 0; x < settingsWindow.children.length; ++x) settingsWindow.children[x].classList.remove("selected");
 
-								videoElement.type = `video/${format.container}`;
-								videoElement.src = format.url;
+								if (player.mediaSource instanceof MediaSource) for (const sourceBuffer of player.mediaSource.sourceBuffers) {
+									if (player.mediaSource.duration > 0) player.sourceBuffer.remove(0, player.mediaSource.duration);
+									player.mediaSource.removeSourceBuffer(sourceBuffer);
+								}
+
+								const previousTime = videoElement.currentTime;
+								player.mediaSource = new MediaSource();
+								player.mediaSource.threadId = ++player.threadId;
+								videoElement.src = URL.createObjectURL(player.mediaSource);
 								videoElement.currentTime = previousTime;
 
-								for (let x = 0; x < settingsWindow.children.length; ++x) settingsWindow.children[x].classList.remove("selected");
-								settingsWindow.querySelector(`#settings-${format.id}`).classList.add("selected");
+								player.mediaSource.addEventListener("sourceopen", () => {
+									console.log(format.type, "?");
+									player.sourceBuffer = player.mediaSource.addSourceBuffer(format.type);
+									console.log(format.type, "ok");
+
+									const xhr = new XMLHttpRequest();
+									xhr.open("GET", format.url, true);
+									xhr.responseType = "arraybuffer";
+									xhr.setRequestHeader("Range", "bytes=0-1");
+									xhr.addEventListener("load", () => {
+										settingsWindow.querySelector(`#settings-${format.id}`).classList.add("selected");
+
+										const length = Number(xhr.getResponseHeader("Content-Range").split("/")[1]);
+
+										let cache = {};
+										setInterval(() => cache = {}, 5000);
+
+										const loadChunk = (start, end) => new Promise((resolve, reject) => {
+											if (cache[format.url] != null) {
+												player.sourceBuffer.addEventListener("abort", reject, { once: true });
+												player.sourceBuffer.addEventListener("error", reject, { once: true });
+												player.sourceBuffer.addEventListener("update", resolve, { once: true });
+
+												if (player.sourceBuffer.updating) reject();
+												else player.sourceBuffer.appendBuffer(cache[format.url]);
+											} else {
+												const xhr = new XMLHttpRequest();
+
+												xhr.open("GET", format.url, true);
+												xhr.responseType = "arraybuffer";
+												xhr.timeout = 10000;
+												xhr.setRequestHeader("Range", `bytes=${start}-${end}`);
+
+												xhr.addEventListener("error", reject);
+												xhr.addEventListener("load", () => {
+													if (xhr.status == 206) {
+														cache[format.url] = xhr.response;
+
+														player.sourceBuffer.addEventListener("abort", reject, { once: true });
+														player.sourceBuffer.addEventListener("error", reject, { once: true });
+														player.sourceBuffer.addEventListener("update", resolve, { once: true });
+
+														if (player.sourceBuffer.updating) reject();
+														else player.sourceBuffer.appendBuffer(xhr.response);
+													} else if (xhr.status == 416) {
+														console.error(`${start}-${end}/${length}`);
+													} else {
+														console.error(xhr.status);
+													}
+												});
+												xhr.addEventListener("timeout", reject);
+
+												xhr.send();
+											}
+										});
+
+										const chunkSize = 2 ** 22;
+
+										let loadedChunks = [];
+
+										const update = async () => {
+											let start = Math.max(0, Math.floor((videoElement.currentTime - 1) * format.intBitrate / chunkSize) * chunkSize);
+											let end = start + chunkSize;
+
+											if (Number(loadedChunks[0]?.split("-")[1]) < start && !player.sourceBuffer.updating) {
+												player.sourceBuffer.remove(0, (start / chunkSize) - 1);
+												console.info(`- ${loadedChunks.shift()}`);
+											}
+
+											try {
+												let loop = true;
+												while (loop) {
+													if (loadedChunks.indexOf(`${start}-${end}`) == -1) {
+														await loadChunk(start, end - 1);
+														loadedChunks.push(`${start}-${end}`);
+														console.info(`+ ${start}-${end}`);
+														loop = false;
+													} else {
+														start = end;
+														end += chunkSize;
+														end = Math.min(length, end);
+
+														if (start >= length) {
+															loop = false;
+														}
+													}
+												}
+											} catch { }
+											
+											if (player.threadId === player.mediaSource.threadId) setTimeout(update, 100);
+											else {
+												loadedChunks.forEach((chunk) => console.info(`- ${chunk}`));
+												loadedChunks = [];
+												console.info("New thread spawned");
+											}
+										};
+
+										update();
+									});
+									xhr.send();
+								}, { once: true });
 							};
 
 							const audioElement = document.createElement("audio");
@@ -184,11 +291,8 @@ const Pages = {
 							const audioSource = actx.createMediaElementSource(audioElement);
 							audioSource.connect(actx.destination);
 
+							videoElement.muted = true;
 							videoElement.poster = datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url;
-
-							const synchronize = () => {
-								if (Math.sqrt(Math.pow(audioElement.currentTime - videoElement.currentTime, 2)) > 0.1) videoElement.currentTime = audioElement.currentTime;
-							};
 
 							audioElement.addEventListener("play", () => videoElement.play());
 							audioElement.addEventListener("pause", () => videoElement.pause());
@@ -196,8 +300,7 @@ const Pages = {
 								videoElement.playbackRate = 0;
 								loader.style.display = "";
 							});
-							audioElement.addEventListener("canplaythrough", async () => {
-								if (videoElement.readyState < 3) await new Promise((resolve) => videoElement.addEventListener("canplaythrough", resolve));
+							audioElement.addEventListener("canplaythrough", () => {
 								videoElement.playbackRate = 1;
 								loader.style.display = "none";
 							});
@@ -205,14 +308,19 @@ const Pages = {
 							videoElement.addEventListener("click", () => {
 								if (player.currentWindow) player.currentWindow.classList.remove("visible");
 							});
-							videoElement.addEventListener("play", () => statusButton.classList.add("enabled"));
-							videoElement.addEventListener("pause", () => statusButton.classList.remove("enabled"));
+							videoElement.addEventListener("play", () => {
+								audioElement.play();
+								statusButton.classList.add("enabled")
+							});
+							videoElement.addEventListener("pause", () => {
+								audioElement.pause();
+								statusButton.classList.remove("enabled")
+							});
 							videoElement.addEventListener("seeking", () => {
 								audioElement.playbackRate = 0;
 								loader.style.display = "";
 							});
-							videoElement.addEventListener("canplaythrough", async () => {
-								if (audioElement.readyState < 3) await new Promise((resolve) => audioElement.addEventListener("canplaythrough", resolve));
+							videoElement.addEventListener("canplaythrough", () => {
 								audioElement.playbackRate = 1;
 								loader.style.display = "none";
 							});
@@ -222,7 +330,7 @@ const Pages = {
 							});
 
 							const update = () => {
-								synchronize();
+								if (Math.sqrt(Math.pow(audioElement.currentTime - videoElement.currentTime, 2)) > 0.1) audioElement.currentTime = videoElement.currentTime;
 
 								const playerComputedStyle = getComputedStyle(player);
 								const videoComputedStyle = getComputedStyle(videoElement);
@@ -239,17 +347,16 @@ const Pages = {
 								if (videoElement.buffered.length > 0) {
 									loadedTimeline.style.left = getComputedStyle(timelineCursor).width;
 
-									const loaded = Math.min(audioElement.buffered.end(audioElement.buffered.length - 1), videoElement.buffered.end(videoElement.buffered.length - 1));
+									const loaded = player.sourceBuffer.buffered.end(player.sourceBuffer.buffered.length - 1);
 									loadedTimeline.style.width = `calc(${getComputedStyle(timeline).width} * ${(loaded - videoElement.currentTime) / videoElement.duration})`;
 								} else {
 									loadedTimeline.style.left = 0;
 									loadedTimeline.style.width = 0;
 								}
 
-								const delay = (Math.sqrt(Math.pow(audioElement.currentTime - videoElement.currentTime, 2)) * 1000).toFixed(1);
-
 								requestAnimationFrame(update);
 							};
+
 							update();
 
 							controls.addEventListener("mousenter", () => controls.classList.add("visible"));
@@ -367,6 +474,6 @@ addEventListener("DOMContentLoaded", () => {
 			});
 
 			// Pages.set();
-			Pages.set("video", "BQzT1SqxIQc");
+			Pages.set("video", "gQrdO9nDRhw");
 		}).catch((e) => Pages.utils.error("Failed to fetch user's datas", e));
 });

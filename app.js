@@ -227,7 +227,7 @@ app.on("ready", () => {
 						}
 					};
 
-					progress(percent) { };
+					progress(percent) { console.log(percent) };
 
 					getChunk(start = 0, end = 1) {
 						return new Promise((resolve, reject) => {
@@ -257,11 +257,11 @@ app.on("ready", () => {
 									"Range": "bytes=0-1"
 								},
 								timeout: 5000
-							}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
+							}, (res) => resolve(Number(res.headers["Content-Range"].split("/")[1]))));
 
 							while (this.downloaded < this.length) {
 								const start = this.downloaded;
-								const end = Math.min(start + 2 ** 20, this.length - 1);
+								const end = Math.min(start + 2 ** 22, this.length - 1);
 
 								const download = async () => {
 									try {
@@ -289,13 +289,8 @@ app.on("ready", () => {
 				if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
 				if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath, { recursive: true });
 
-				const progress = (log) => console.log((new Date()).toISOString(), log);
-
 				const audioDownloader = new Downloader(`${tempPath}/audio.webm`, datas.audio);
 				const videoDownloader = new Downloader(`${tempPath}/video.webm`, datas.video);
-
-				audioDownloader.progress = (percent) => progress(`Downloading audio: ${percent.toFixed(2)}%`);
-				videoDownloader.progress = (percent) => progress(`Downloading video: ${percent.toFixed(2)}%`);
 
 				await audioDownloader.start();
 				await videoDownloader.start();
