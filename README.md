@@ -43,3 +43,4 @@ For more information, learn about these third parties:
 - [YouTube](https://www.youtube.com)
 - [YouTube Data API](https://developers.google.com/youtube)
 - [ytdl-core](https://github.com/fent/node-ytdl-core)
+- [Discord-RPC](https://www.npmjs.com/package/discord-rpc)
