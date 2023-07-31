@@ -227,7 +227,7 @@ app.on("ready", () => {
 						}
 					};
 
-					progress(percent) { console.log(percent) };
+					progress(percent) { console.log(percent.toFixed(1) + "%") };
 
 					getChunk(start = 0, end = 1) {
 						return new Promise((resolve, reject) => {
@@ -257,7 +257,7 @@ app.on("ready", () => {
 									"Range": "bytes=0-1"
 								},
 								timeout: 5000
-							}, (res) => resolve(Number(res.headers["Content-Range"].split("/")[1]))));
+							}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
 
 							while (this.downloaded < this.length) {
 								const start = this.downloaded;
