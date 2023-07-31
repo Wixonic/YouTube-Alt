@@ -178,6 +178,131 @@ const launch = () => {
 	});
 };
 
+const Downloader = {
+	download: async (url, path) => {
+		const stream = fs.createWriteStream(path);
+		let downloaded = 0;
+
+		const getChunk = (start = 0, end = 1) => new Promise((resolve, reject) => {
+			https.get(url, {
+				headers: {
+					"Range": `bytes=${start}-${end}`
+				},
+				timeout: 5000
+			}, (res) => {
+				if (res.statusCode === 206) {
+					res.response = "";
+					res.on("data", (chunk) => {
+						res.response += chunk;
+						downloaded += chunk.length;
+					});
+					res.on("error", (e) => reject(e));
+					resolve(res);
+				} else reject(res.statusCode);
+			});
+		});
+
+		const length = await new Promise((resolve) => https.get(url, {
+			headers: {
+				"Range": "bytes=0-1"
+			},
+			timeout: 5000
+		}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
+
+		while (downloaded < length) {
+			const start = downloaded;
+			const end = Math.min(start + 2 ** 22, length - 1);
+
+			const download = async () => {
+				try {
+					const res = await getChunk(start, end);
+					res.pipe(stream, { end: end + 1 === length });
+					await new Promise((resolve) => res.on("end", resolve));
+				} catch {
+					if (download.retries < 5) reject(`Failed to download part ${start}-${end}`)
+				}
+			};
+
+			download.retries = 0;
+			await download();
+		}
+	},
+
+	launch: (datas) => new Promise((resolve) => {
+		const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.video.id}-${datas.quality}`;
+		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.video.id}`;
+
+		if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
+		if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath, { recursive: true });
+
+		Downloader.download(datas.audio.url, `${tempPath}/audio.${datas.audio.container}`)
+			.then(() => {
+				Downloader.download(datas.video.url, `${tempPath}/video.${datas.video.container}`)
+					.then(async () => {
+						if (!Downloader.ffmpeg) {
+							await Downloader.download(`https://github.com/Wixonic/YouTube-Alt/blob/Default/assets/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`, `${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`);
+							Downloader.ffmpeg = true;
+						}
+
+						const process = spawn(`${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`, [
+							"-hide_banner",
+							"-loglevel", "verbose",
+
+							"-i", `${tempPath}/audio.${datas.audio.container}`,
+							"-i", `${tempPath}/video.${datas.video.container}`,
+							"-i", `${datas.cover}`,
+
+							"-map", "0:a",
+							"-map", "1:v",
+							"-map", "2:v",
+
+							"-c:a:0", "aac",
+							"-c:v:1", "h264",
+
+							"-disposition:v:2", "attached_pic",
+
+							"-preset", "ultrafast",
+							"-crf", "30",
+
+							"-y",
+							`${downloadPath}/${datas.format}.mp4`
+						]);
+
+						process.stdout.on("data", (chunk) => {
+							process.stdout.write(chunk);
+						});
+
+						process.on("exit", (code) => {
+							if (code === 0) {
+								const notification = new Notification({
+									title: "Video downloaded",
+									body: `Successfully downloaded "${datas.title}" by ${datas.channel}`,
+									icon: datas.cover,
+									urgency: "low"
+								});
+								notification.show();
+								resolve();
+							} else {
+								const notification = new Notification({
+									title: "Download failed",
+									body: `Failed to download "${datas.title}" by ${datas.channel}`,
+									icon: datas.cover,
+									urgency: "critical"
+								});
+								notification.show();
+								resolve();
+							}
+						});
+					}).catch((e) => {
+						console.error(e);
+					});
+			}).catch((e) => {
+				console.error(e);
+			});
+	}),
+	ffmpeg: fs.existsSync(`${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`)
+};
+
 app.on("ready", () => {
 	app.rpc = new DiscordRPC.Client({ transport: "ipc" });
 	app.rpc.login({ clientId: "1130539590026002464" })
@@ -209,134 +334,7 @@ app.on("ready", () => {
 			console.error(e);
 			ipcMain.handle("discord:rpc", () => null);
 		}).finally(() => {
-			ipcMain.handle("youtube:download", (_, datas) => new Promise(async (resolve) => {
-				class Downloader {
-					constructor(path, url) {
-						this.downloaded = 0;
-						this.length = 0;
-						this.path = path;
-						this.stream = fs.createWriteStream(path);
-						this.url = url;
-					};
-
-					get percent() {
-						try {
-							return this.downloaded / this.length * 100;
-						} catch {
-							return 0;
-						}
-					};
-
-					progress(percent) { console.log(percent.toFixed(1) + "%") };
-
-					getChunk(start = 0, end = 1) {
-						return new Promise((resolve, reject) => {
-							https.get(this.url, {
-								headers: {
-									"Range": `bytes=${start}-${end}`
-								},
-								timeout: 5000
-							}, (res) => {
-								if (res.statusCode === 206) {
-									res.response = "";
-									res.on("data", (chunk) => {
-										res.response += chunk;
-										this.downloaded += chunk.length;
-									});
-									res.on("error", (e) => reject(e));
-									resolve(res);
-								} else reject(res.statusCode);
-							});
-						});
-					};
-
-					start() {
-						return new Promise(async (resolve, reject) => {
-							this.length = await new Promise((resolve) => https.get(this.url, {
-								headers: {
-									"Range": "bytes=0-1"
-								},
-								timeout: 5000
-							}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
-
-							while (this.downloaded < this.length) {
-								const start = this.downloaded;
-								const end = Math.min(start + 2 ** 22, this.length - 1);
-
-								const download = async () => {
-									try {
-										const res = await this.getChunk(start, end);
-										res.pipe(this.stream, { end: end + 1 === this.length });
-										this.progress(this.percent);
-										await new Promise((resolve) => res.on("end", resolve));
-									} catch {
-										if (download.retries < 5) reject(`Failed to download part ${start}-${end}`)
-									}
-								};
-
-								download.retries = 0;
-								await download();
-							}
-
-							resolve();
-						});
-					};
-				};
-
-				const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.videoId}-${datas.quality}`;
-				const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.videoId}`;
-
-				if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
-				if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath, { recursive: true });
-
-				const audioDownloader = new Downloader(`${tempPath}/audio.webm`, datas.audio);
-				const videoDownloader = new Downloader(`${tempPath}/video.webm`, datas.video);
-
-				await audioDownloader.start();
-				await videoDownloader.start();
-
-				const ffmpegProcess = spawn(`${__dirname}/assets/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`, [
-					"-hide_banner",
-					"-loglevel", "verbose",
-
-					"-i", `${tempPath}/audio.webm`,
-					"-i", `${tempPath}/video.webm`,
-					"-i", `${datas.cover}`,
-
-					"-map", "0:a",
-					"-map", "1:v",
-					"-map", "2:v",
-
-					"-c:a:0", "aac",
-					"-c:v:1", "h264",
-
-					"-disposition:v:2", "attached_pic",
-
-					"-preset", "ultrafast",
-					"-crf", "30",
-
-					"-y",
-					`${downloadPath}/${datas.formatId}.mp4`
-				]);
-
-				ffmpegProcess.stdout.on("data", (chunk) => process.stdout.write(chunk));
-				ffmpegProcess.stderr.on("data", (chunk) => process.stderr.write(chunk));
-
-				ffmpegProcess.on("spawn", () => console.log(ffmpegProcess.spawnargs.join(" ")));
-				ffmpegProcess.on("exit", (code) => {
-					if (code === 0) {
-						fs.writeFileSync(`${downloadPath}/info.json`, JSON.stringify(datas), "utf-8");
-						const endNotification = new Notification({
-							title: "Video downloaded",
-							body: `Successfully downloaded "${datas.title}" by ${datas.channel}`,
-							icon: datas.cover,
-							urgency: "low"
-						});
-						endNotification.show();
-						resolve();
-					} else console.error(`ffmpeg exit with ${code}`);
-				});
-			}));
+			ipcMain.handle("youtube:download", (_, datas) => Downloader.launch(datas));
 
 			ipcMain.handle("youtube:info", async (_, id, country = "EN") => {
 				const path = `${app.getPath("temp")}YouTube Alt/ytdl-cache/${id}/info.json`;

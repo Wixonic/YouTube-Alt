@@ -12,10 +12,10 @@ const Pages = {
 		video: (id, downloaded = false) => {
 			(downloaded ? downloads.info(id) : youtube.info(id, channels && channels.length > currentChannel ? channels[currentChannel]?.snippet?.country : null))
 				.then(async (datas) => {
-					/* discord.rpc({
+					discord.rpc({
 						details: `Watching videos`,
 						state: `${datas.videoDetails.author.name} - ${datas.videoDetails.title}`
-					}); */
+					});
 
 					if (downloaded) Pages.list.video(id);
 					else {
@@ -57,7 +57,7 @@ const Pages = {
 										container: format.container,
 										duration: format.approxDurationMs / 1000,
 										fps: format.fps,
-										height: format.height,
+										height: Math.round(format.width * 9 / 16),
 										id,
 										hasAudio: format.hasAudio,
 										hasVideo: format.hasVideo,
@@ -178,7 +178,7 @@ const Pages = {
 													}
 												}
 											} catch { }
-											
+
 											if (player.threadId === player.mediaSource.threadId) setTimeout(update, 100);
 											else {
 												loadedChunks.forEach((chunk) => console.info(`- ${chunk}`));
@@ -263,7 +263,14 @@ const Pages = {
 									downloadButton.classList.add("enabled");
 
 									youtube.download({
-										audio: formats["Audio"].url,
+										audio: {
+											container: formats["Audio"].container,
+											url: formats["Audio"].url
+										},
+										video: {
+											container: format.container,
+											url: format.url
+										},
 										video: format.url,
 										cover: datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url,
 
@@ -271,8 +278,8 @@ const Pages = {
 										channel: datas.videoDetails.author.name,
 										publishDate: datas.videoDetails.publishDate,
 
-										videoId: id,
-										formatId: format.id,
+										id,
+										format: format.id,
 										quality: {
 											fps: format.fps,
 											height: format.height

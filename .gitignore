@@ -1,8 +1,6 @@
 dist/
 node_modules/
 
-assets/ffmpeg
-assets/ffmpeg.exe
 config.json
 package-lock.json
 
