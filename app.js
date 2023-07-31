@@ -179,6 +179,10 @@ const launch = () => {
 };
 
 const Downloader = {
+	ffmpeg: fs.existsSync(`${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`),
+	id: 0,
+	window: null,
+
 	download: async (url, path) => {
 		const stream = fs.createWriteStream(path);
 		let downloaded = 0;
@@ -229,6 +233,25 @@ const Downloader = {
 	},
 
 	launch: (datas) => new Promise((resolve) => {
+		const id = Downloader.id++;
+		if (!Downloader.window) {
+			Downloader.window = new BrowserWindow({
+				backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
+				minHeight: 300,
+				minWidth: 200,
+				resizable: false,
+				title: "Downloads",
+				webPreferences: {
+					preload: `${__dirname}/pages/downloads/preload.js`
+				}
+			});
+
+			Downloader.window.on("close", () => Downloader.window = null);
+			Downloader.window.loadFile(`${__dirname}/pages/downloads/index.html`);
+		}
+
+		Downloader.window.webContents.send("new", id, datas);
+
 		const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.video.id}-${datas.quality}`;
 		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.video.id}`;
 
@@ -299,8 +322,7 @@ const Downloader = {
 			}).catch((e) => {
 				console.error(e);
 			});
-	}),
-	ffmpeg: fs.existsSync(`${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`)
+	})
 };
 
 app.on("ready", () => {
