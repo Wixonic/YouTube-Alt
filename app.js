@@ -233,26 +233,14 @@ const Downloader = {
 	},
 
 	launch: (datas) => new Promise((resolve) => {
+		console.log(datas);
+
+		Downloader.launchWindow();
+
 		const id = Downloader.id++;
-		if (!Downloader.window) {
-			Downloader.window = new BrowserWindow({
-				backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
-				minHeight: 300,
-				minWidth: 200,
-				resizable: false,
-				title: "Downloads",
-				webPreferences: {
-					preload: `${__dirname}/pages/downloads/preload.js`
-				}
-			});
-
-			Downloader.window.on("close", () => Downloader.window = null);
-			Downloader.window.loadFile(`${__dirname}/pages/downloads/index.html`);
-		}
-
 		Downloader.window.webContents.send("new", id, datas);
 
-		const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.video.id}-${datas.quality}`;
+		const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.video.id}-${datas.format}`;
 		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.video.id}`;
 
 		if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
@@ -322,7 +310,24 @@ const Downloader = {
 			}).catch((e) => {
 				console.error(e);
 			});
-	})
+	}),
+	launchWindow: () => {
+		if (!Downloader.window) {
+			Downloader.window = new BrowserWindow({
+				backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
+				height: 400,
+				width: 300,
+				resizable: false,
+				title: "Downloads",
+				webPreferences: {
+					preload: `${__dirname}/pages/downloads/preload.js`
+				}
+			});
+
+			Downloader.window.on("close", () => Downloader.window = null);
+			Downloader.window.loadFile(`${__dirname}/pages/downloads/index.html`);
+		}
+	}
 };
 
 app.on("ready", () => {

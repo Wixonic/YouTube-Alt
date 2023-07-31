@@ -271,7 +271,6 @@ const Pages = {
 											container: format.container,
 											url: format.url
 										},
-										video: format.url,
 										cover: datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url,
 
 										title: datas.videoDetails.title,
@@ -481,6 +480,6 @@ addEventListener("DOMContentLoaded", () => {
 			});
 
 			// Pages.set();
-			Pages.set("video", "gQrdO9nDRhw");
+			Pages.set("video", "uBXgEHC60n0");
 		}).catch((e) => Pages.utils.error("Failed to fetch user's datas", e));
 });
