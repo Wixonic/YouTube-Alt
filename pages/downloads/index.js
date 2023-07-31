@@ -1,24 +1,19 @@
-downloader.onFail((e, id) => {
-	console.log(e, id);
-	document.body.innerHTML = `${id} fail<br />${document.body.innerHTML}`;
+downloader.onFail((_, id) => {
+	document.body.innerHTML = `${id} fail`;
 });
 
-downloader.onNew((e, id, datas) => {
-	console.log(e, id, datas);
-	document.body.innerHTML = `${id} started<br />${document.body.innerHTML}`;
+downloader.onNew((_, id, datas) => {
+	document.body.innerHTML = `${id} started`;
 });
 
-downloader.onProgress((e, id, percent) => {
-	console.log(e, id, percent);
-	document.body.innerHTML = `${id} progress (${Math.ceil(percent * 100)}%)<br />${document.body.innerHTML}`;
+downloader.onProgress((_, id, percent) => {
+	document.body.innerHTML = `${id} progress (${(percent * 100).toFixed(1)}%)`;
 });
 
-downloader.onSuccess((e, id) => {
-	console.log(e, id);
-	document.body.innerHTML = `${id} success<br />${document.body.innerHTML}`;
+downloader.onSuccess((_, id) => {
+	document.body.innerHTML = `${id} success`;
 });
 
-downloader.onUpdate((e, id, text) => {
-	console.log(e, id, text);
-	document.body.innerHTML = `${id} update (${text})<br />${document.body.innerHTML}`;
+downloader.onUpdate((_, id, text) => {
+	document.body.innerHTML = `${id} update (${text})`;
 });

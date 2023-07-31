@@ -11,7 +11,7 @@ const Pages = {
 	list: {
 		video: (id, downloaded = false) => {
 			(downloaded ? downloads.info(id) : youtube.info(id, channels && channels.length > currentChannel ? channels[currentChannel]?.snippet?.country : null))
-				.then(async (datas) => {
+				.then((datas) => {
 					discord.rpc({
 						details: `Watching videos`,
 						state: `${datas.videoDetails.author.name} - ${datas.videoDetails.title}`
@@ -277,6 +277,8 @@ const Pages = {
 										channel: datas.videoDetails.author.name,
 										publishDate: datas.videoDetails.publishDate,
 
+										duration: datas.videoDetails.lengthSeconds,
+
 										id,
 										format: format.id,
 										quality: {
@@ -461,7 +463,7 @@ addEventListener("DOMContentLoaded", () => {
 	window.currentChannel = new URLSearchParams(location.search).get("channel") || 0;
 
 	youtube.request("/channels?maxResults=1&mine=true&part=snippet&fields=items(snippet(thumbnails(default(url)),country))")
-		.then((response) => {
+		.then(async (response) => {
 			window.channels = response.datas.items;
 			document.querySelector("header > div.profile > img.logo").src = channels && channels.length > currentChannel && channels[currentChannel]?.snippet?.thumbnails?.default?.url ? channels[currentChannel].snippet.thumbnails.default.url : "../../assets/user.svg";
 
@@ -479,7 +481,7 @@ addEventListener("DOMContentLoaded", () => {
 				else Pages.set("search", e.target.value);
 			});
 
-			// Pages.set();
-			Pages.set("video", "uBXgEHC60n0");
+			if (await isDev()) Pages.set("video", "uBXgEHC60n0");
+			else Pages.set();
 		}).catch((e) => Pages.utils.error("Failed to fetch user's datas", e));
 });

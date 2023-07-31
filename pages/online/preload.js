@@ -1,5 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+contextBridge.exposeInMainWorld("isDev",() => ipcRenderer.invoke("isDev"));
+
 contextBridge.exposeInMainWorld("discord", {
 	rpc: (datas) => ipcRenderer.invoke("discord:rpc", datas)
 });

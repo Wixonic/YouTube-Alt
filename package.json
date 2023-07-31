@@ -15,7 +15,7 @@
 	},
 	"main": "app.js",
 	"scripts": {
-		"start": "electron .",
+		"start": "APP_DEV=true electron .",
 		"clear": "rm -rf dist; clear",
 		"build": "electron-builder build --mac --win --x64 -c.mac.identity=null"
 	},
@@ -24,7 +24,7 @@
 	},
 	"dependencies": {
 		"discord-rpc": "^4.0.1",
-		"sudo-prompt": "^9.2.1",
+		"ffmpeg-static": "^5.1.0",
 		"ytdl-core": "^4.11.5"
 	},
 	"devDependencies": {
@@ -36,10 +36,12 @@
 		"artifactName": "${name}.v${version}.${os}.${ext}",
 		"executableName": "YouTube Alt",
 		"productName": "YouTube Alt",
+		"asarUnpack": [
+			"node_modules/ffmpeg-static/*"
+		],
 		"mac": {
 			"files": [
 				"assets/**",
-				"!assets/ffmpeg.exe",
 				"!assets/icon.ico",
 				"node_modules/**",
 				"pages/**",
@@ -52,7 +54,6 @@
 		"win": {
 			"files": [
 				"assets/**",
-				"!assets/ffmpeg",
 				"!assets/icon.icns",
 				"node_modules/**",
 				"pages/**",

@@ -4,10 +4,11 @@ const dns = require("dns");
 const { app, BrowserWindow, dialog, ipcMain, nativeTheme, Notification } = require("electron");
 const fs = require("fs");
 const https = require("https");
-const sudo = require("sudo-prompt");
 const ytdl = require("ytdl-core");
 
 const config = require("./config.json");
+
+const isDev = process.env.APP_DEV === "true";
 
 app.startTimestamp = new Date();
 
@@ -269,14 +270,30 @@ const Downloader = {
 
 		fs.writeFileSync(`${downloadPath}/info.json`, JSON.stringify(datas), "utf-8");
 
-		if (!fs.existsSync(`${tempPath}/audio.${datas.audio.container}`)) Downloader.window.webContents.send("update", id, "Downloading audio");
+		if (!fs.existsSync(`${tempPath}/audio.${datas.audio.container}`)) {
+			try {
+				Downloader.window.webContents.send("update", id, "Downloading audio");
+			} catch { }
+		}
+
 		Downloader.download(datas.audio.url, `${tempPath}/audio.${datas.audio.container}`, id)
 			.then(() => {
-				if (!fs.existsSync(`${tempPath}/video.${datas.video.container}`)) Downloader.window.webContents.send("update", id, "Downloading video");
+				if (!fs.existsSync(`${tempPath}/video.${datas.video.container}`)) {
+					try {
+						Downloader.window.webContents.send("update", id, "Downloading video");
+					} catch { }
+				}
+
 				Downloader.download(datas.video.url, `${tempPath}/video.${datas.video.container}`, id)
-					.then(async () => {
-						Downloader.window.webContents.send("update", id, "Merging audio and video");
-						const ffmpeg = spawn(`assets/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`, [
+					.then(() => {
+						try {
+							Downloader.window.webContents.send("update", id, "Merging audio and video");
+						} catch { }
+
+						let ffmpegPath = require("ffmpeg-static");
+						if (!isDev) ffmpegPath = ffmpegPath.replace("app.asar", "app.asar.unpacked");
+
+						const ffmpeg = spawn(ffmpegPath, [
 							"-hide_banner",
 							"-loglevel", "verbose",
 
@@ -300,10 +317,17 @@ const Downloader = {
 							`${downloadPath}/${datas.format}.mp4`
 						]);
 
-						ffmpeg.stdout.on("data", (chunk) => {
-							Downloader.window.webContents.send("progress", id, 0);
-							process.stdout.write(chunk);
-						});
+						const output = (chunk) => {
+							chunk = chunk.toString();
+
+							if (chunk.startsWith("frame")) {
+								try {
+									Downloader.window.webContents.send("progress", id, Number(chunk.split("fps")[0].split("=")[1]) / (datas.duration * datas.quality.fps));
+								} catch { }
+							}
+						};
+						ffmpeg.stdout.on("data", output);
+						ffmpeg.stderr.on("data", output);
 
 						ffmpeg.on("exit", (code) => {
 							if (code === 0) {
@@ -357,6 +381,8 @@ const Downloader = {
 };
 
 app.on("ready", () => {
+	ipcMain.handle("isDev", () => isDev);
+
 	app.rpc = new DiscordRPC.Client({ transport: "ipc" });
 	app.rpc.login({ clientId: "1130539590026002464" })
 		.then(() => {
