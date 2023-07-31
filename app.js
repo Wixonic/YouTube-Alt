@@ -4,6 +4,7 @@ const dns = require("dns");
 const { app, BrowserWindow, dialog, ipcMain, nativeTheme, Notification } = require("electron");
 const fs = require("fs");
 const https = require("https");
+const sudo = require("sudo-prompt");
 const ytdl = require("ytdl-core");
 
 const config = require("./config.json");
@@ -179,83 +180,103 @@ const launch = () => {
 };
 
 const Downloader = {
-	ffmpeg: fs.existsSync(`${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`),
 	id: 0,
 	window: null,
 
-	download: async (url, path) => {
-		const stream = fs.createWriteStream(path);
-		let downloaded = 0;
+	download: async (url, path, id, partialResponse = true, force = false) => {
+		if (!fs.existsSync(path) || force) {
+			const stream = fs.createWriteStream(path);
 
-		const getChunk = (start = 0, end = 1) => new Promise((resolve, reject) => {
-			https.get(url, {
-				headers: {
-					"Range": `bytes=${start}-${end}`
-				},
-				timeout: 5000
-			}, (res) => {
-				if (res.statusCode === 206) {
-					res.response = "";
-					res.on("data", (chunk) => {
-						res.response += chunk;
-						downloaded += chunk.length;
+			if (partialResponse) {
+				let downloaded = 0;
+
+				const getChunk = (start = 0, end = 1) => new Promise((resolve, reject) => {
+					https.get(url, {
+						headers: {
+							"Range": `bytes=${start}-${end}`
+						},
+						timeout: 5000
+					}, (res) => {
+						if (res.statusCode === 206) {
+							res.response = "";
+							res.on("data", (chunk) => {
+								res.response += chunk;
+								downloaded += chunk.length;
+							});
+							res.on("error", reject);
+							resolve(res);
+						} else reject(res.statusCode);
 					});
-					res.on("error", (e) => reject(e));
-					resolve(res);
-				} else reject(res.statusCode);
-			});
-		});
+				});
 
-		const length = await new Promise((resolve) => https.get(url, {
-			headers: {
-				"Range": "bytes=0-1"
-			},
-			timeout: 5000
-		}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
+				const length = await new Promise((resolve) => https.get(url, {
+					headers: {
+						"Range": "bytes=0-1"
+					},
+					timeout: 5000
+				}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
 
-		while (downloaded < length) {
-			const start = downloaded;
-			const end = Math.min(start + 2 ** 22, length - 1);
+				while (downloaded < length) {
+					const start = downloaded;
+					const end = Math.min(start + 2 ** 22, length - 1);
 
-			const download = async () => {
-				try {
-					const res = await getChunk(start, end);
-					res.pipe(stream, { end: end + 1 === length });
-					await new Promise((resolve) => res.on("end", resolve));
-				} catch {
-					if (download.retries < 5) reject(`Failed to download part ${start}-${end}`)
+					const download = async () => {
+						try {
+							const res = await getChunk(start, end);
+							res.pipe(stream, { end: end + 1 === length });
+							await new Promise((resolve) => res.on("end", resolve));
+							Downloader.window.webContents.send("progress", id, download / length);
+						} catch {
+							if (download.retries > 5) reject(`Failed to download part ${start}-${end}`);
+							else {
+								download.retries++;
+								await download();
+							}
+						}
+					};
+
+					download.retries = 0;
+					await download();
 				}
-			};
+			} else {
+				await new Promise((resolve, reject) => {
+					https.get(url, (res) => {
+						if (res.statusCode === 200) {
+							res.on("error", reject);
 
-			download.retries = 0;
-			await download();
+							res.pipe(stream);
+							stream.on("finish", resolve);
+						} else reject(res.statusCode);
+					});
+				});
+			}
 		}
 	},
 
-	launch: (datas) => new Promise((resolve) => {
-		console.log(datas);
-
-		Downloader.launchWindow();
+	launch: (datas) => new Promise(async (resolve, reject) => {
+		await Downloader.launchWindow();
 
 		const id = Downloader.id++;
 		Downloader.window.webContents.send("new", id, datas);
 
-		const tempPath = `${app.getPath("temp")}YouTube Alt/downloads/${datas.video.id}-${datas.format}`;
-		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.video.id}`;
+		const appPath = `${app.getPath("appData")}/YouTube Alt/`;
+		const tempPath = `${app.getPath("temp")}/YouTube Alt/downloads/${datas.id}-${datas.format}`;
+		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.id}`;
 
+		if (!fs.existsSync(appPath)) fs.mkdirSync(appPath, { recursive: true });
 		if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
 		if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath, { recursive: true });
 
-		Downloader.download(datas.audio.url, `${tempPath}/audio.${datas.audio.container}`)
-			.then(() => {
-				Downloader.download(datas.video.url, `${tempPath}/video.${datas.video.container}`)
-					.then(async () => {
-						if (!Downloader.ffmpeg) {
-							await Downloader.download(`https://github.com/Wixonic/YouTube-Alt/blob/Default/assets/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`, `${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`);
-							Downloader.ffmpeg = true;
-						}
+		fs.writeFileSync(`${downloadPath}/info.json`, JSON.stringify(datas), "utf-8");
 
-						const process = spawn(`${app.getPath("appData")}YouTube Alt/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`, [
+		if (!fs.existsSync(`${tempPath}/audio.${datas.audio.container}`)) Downloader.window.webContents.send("update", id, "Downloading audio");
+		Downloader.download(datas.audio.url, `${tempPath}/audio.${datas.audio.container}`, id)
+			.then(() => {
+				if (!fs.existsSync(`${tempPath}/video.${datas.video.container}`)) Downloader.window.webContents.send("update", id, "Downloading video");
+				Downloader.download(datas.video.url, `${tempPath}/video.${datas.video.container}`, id)
+					.then(async () => {
+						Downloader.window.webContents.send("update", id, "Merging audio and video");
+						const ffmpeg = spawn(`assets/ffmpeg${process.platform === "darwin" ? "" : ".exe"}`, [
 							"-hide_banner",
 							"-loglevel", "verbose",
 
@@ -279,11 +300,12 @@ const Downloader = {
 							`${downloadPath}/${datas.format}.mp4`
 						]);
 
-						process.stdout.on("data", (chunk) => {
+						ffmpeg.stdout.on("data", (chunk) => {
+							Downloader.window.webContents.send("progress", id, 0);
 							process.stdout.write(chunk);
 						});
 
-						process.on("exit", (code) => {
+						ffmpeg.on("exit", (code) => {
 							if (code === 0) {
 								const notification = new Notification({
 									title: "Video downloaded",
@@ -292,6 +314,7 @@ const Downloader = {
 									urgency: "low"
 								});
 								notification.show();
+								Downloader.window.webContents.send("success", id);
 								resolve();
 							} else {
 								const notification = new Notification({
@@ -301,6 +324,7 @@ const Downloader = {
 									urgency: "critical"
 								});
 								notification.show();
+								Downloader.window.webContents.send("fail", id);
 								resolve();
 							}
 						});
@@ -311,7 +335,8 @@ const Downloader = {
 				console.error(e);
 			});
 	}),
-	launchWindow: () => {
+
+	launchWindow: () => new Promise((resolve) => {
 		if (!Downloader.window) {
 			Downloader.window = new BrowserWindow({
 				backgroundColor: nativeTheme.shouldUseDarkColors ? "#000" : "#FFF",
@@ -326,8 +351,9 @@ const Downloader = {
 
 			Downloader.window.on("close", () => Downloader.window = null);
 			Downloader.window.loadFile(`${__dirname}/pages/downloads/index.html`);
-		}
-	}
+			Downloader.window.on("ready-to-show", resolve)
+		} else resolve();
+	})
 };
 
 app.on("ready", () => {
