@@ -6,6 +6,11 @@ const fs = require("fs");
 const https = require("https");
 const ytdl = require("ytdl-core");
 
+console.log({
+	"appData": app.getPath("appData"),
+	"tmp": app.getPath("temp")
+});
+
 const config = require("./config.json");
 
 const isDev = process.env.APP_DEV === "true";
@@ -254,7 +259,7 @@ const Downloader = {
 		}
 	},
 
-	launch: (datas) => new Promise(async (resolve, reject) => {
+	launch: (datas) => new Promise(async (resolve) => {
 		await Downloader.launchWindow();
 
 		const id = Downloader.id++;
@@ -318,6 +323,7 @@ const Downloader = {
 						]);
 
 						const output = (chunk) => {
+							process.stdout.write(chunk);
 							chunk = chunk.toString();
 
 							if (chunk.startsWith("frame")) {

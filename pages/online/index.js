@@ -85,13 +85,17 @@ const Pages = {
 								for (let x = 0; x < settingsWindow.children.length; ++x) settingsWindow.children[x].classList.remove("selected");
 
 								if (player.mediaSource instanceof MediaSource) for (const sourceBuffer of player.mediaSource.sourceBuffers) {
-									if (player.sourceBuffer.updating) player.sourceBuffer.abort();
-									if (player.mediaSource.duration > 0) player.sourceBuffer.remove(0, player.mediaSource.duration);
+									if (sourceBuffer.updating) sourceBuffer.abort();
+									if (sourceBuffer.duration > 0) sourceBuffer.remove(0, player.mediaSource.duration);
 									player.mediaSource.removeSourceBuffer(sourceBuffer);
 								}
 
 								player.mediaSource = new MediaSource();
+								videoElement.src = URL.createObjectURL(player.mediaSource);
 								player.mediaSource.addEventListener("sourceopen", () => {
+									videoElement.currentTime = previousTime;
+									if (wasPlaying) videoElement.play();
+
 									const threadId = ++player.threadId;
 									player.sourceBuffer = player.mediaSource.addSourceBuffer(format.type);
 
@@ -105,7 +109,6 @@ const Pages = {
 										const length = Number(xhr.getResponseHeader("Content-Range").split("/")[1]);
 
 										let cache = {};
-										setInterval(() => cache = {}, 5000);
 
 										const loadChunk = (start, end) => new Promise(async (resolve, reject) => {
 											if (!cache[`${start}-${end}`]) {
@@ -130,7 +133,7 @@ const Pages = {
 													xhr.addEventListener("timeout", () => reject("Timeout"));
 
 													xhr.send();
-												});
+												}).catch(reject);
 											}
 
 											player.sourceBuffer.addEventListener("abort", () => reject("Aborted"), { once: true });
@@ -149,28 +152,83 @@ const Pages = {
 											}
 										});
 
-										const chunkSize = 2 ** 22;
-
-										let loadedChunks = [];
+										const chunkSize = 2 ** 23;
+										let loadedChunks = {};
 
 										const update = async () => {
 											let start = Math.max(0, Math.floor((videoElement.currentTime - 1) * format.intBitrate / chunkSize) * chunkSize);
 											let end = start + chunkSize;
 
-											if (Number(loadedChunks[0]?.split("-")[1]) < start && !player.sourceBuffer.updating) {
-												player.sourceBuffer.remove(0, (start / chunkSize) - 1);
-												console.info(`- ${loadedChunks.shift()}`);
-											}
+											const formatted = {
+												format: (n) => {
+													switch (true) {
+														case n > 10 ** 9:
+															n /= 10 ** 9;
+
+															if (n > 10) n = n.toFixed(0)
+															else n = n.toFixed(1)
+
+															n += " GB"
+															break;
+
+														case n > 10 ** 6:
+															n /= 10 ** 6;
+
+															if (n > 10) n = n.toFixed(0)
+															else n = n.toFixed(1)
+
+															n += " MB"
+															break;
+
+														case n > 10 ** 3:
+															n /= 10 ** 3;
+
+															if (n > 10) n = n.toFixed(0)
+															else n = n.toFixed(1)
+
+															n += " KB"
+															break;
+
+														default:
+															n = Math.round(n);
+															n += " B"
+															break;
+													}
+
+													return n;
+												},
+												get start() {
+													return formatted.format(start);
+												},
+												get end() {
+													return formatted.format(end);
+												}
+											};
+
+											try {
+												let loop = true;
+												while (loop) {
+													if (player.sourceBuffer.updating) await new Promise((resolve) => player.sourceBuffer.addEventListener("updateend", resolve, { once: true }));
+													const key = Object.keys(loadedChunks).sort((a, b) => a[0] - b[0])[0];
+													if (key && loadedChunks[key] && loadedChunks[key][1] < start) {
+														console.log((videoElement.currentTime - loadedChunks[key][1] / format.intBitrate).toFixed(1));
+														player.sourceBuffer.remove(0, loadedChunks[key][1] / format.intBitrate);
+														delete loadedChunks[key];
+														console.info(`- ${key}`);
+													} else loop = false;
+												}
+											} catch { }
 
 											try {
 												let loop = player.threadId == threadId;
 												while (loop) {
-													if (loadedChunks.indexOf(`${start}-${end}`) == -1) {
-														console.log(`? ${start}-${end}`);
+													const id = `${formatted.start} -> ${formatted.end}`;
+
+													if (Object.keys(loadedChunks).indexOf(id) == -1) {
 														await loadChunk(start, end - 1);
-														loadedChunks.push(`${start}-${end}`);
-														console.info(`+ ${start}-${end}`);
-														loop = false;
+														loadedChunks[id] = [start, end];
+														console.info(`+ ${id}`);
+														loop = false
 													} else {
 														start = end;
 														end += chunkSize;
@@ -182,13 +240,13 @@ const Pages = {
 													}
 												}
 											} catch (e) {
-												console.error(`x ${start}-${end}:`, e);
+												if (e) console.error(`x ${formatted.start} -> ${formatted.end}:`, e);
 											}
 
-											if (player.threadId == threadId) setTimeout(update, 500);
+											if (player.threadId == threadId) requestAnimationFrame(update);
 											else {
-												loadedChunks.forEach((chunk) => console.info(`- ${chunk}`));
-												loadedChunks = [];
+												for (let key in loadedChunks) console.log(`- ${key}`);
+												loadedChunks = {};
 												console.info("New thread spawned");
 											}
 										};
@@ -197,10 +255,6 @@ const Pages = {
 									});
 									xhr.send();
 								}, { once: true });
-
-								videoElement.src = URL.createObjectURL(player.mediaSource);
-								videoElement.currentTime = previousTime;
-								if (wasPlaying) videoElement.play();
 							};
 
 							const audioElement = document.createElement("audio");
@@ -493,7 +547,7 @@ addEventListener("DOMContentLoaded", () => {
 				else Pages.set("search", e.target.value);
 			});
 
-			if (await isDev()) Pages.set("video", "uBXgEHC60n0");
+			if (await isDev()) Pages.set("video", "B0YlktE79CM");
 			else Pages.set();
 		}).catch((e) => Pages.utils.error("Failed to fetch user's datas", e));
 });
