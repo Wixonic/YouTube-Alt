@@ -196,6 +196,13 @@ const Downloader = {
 			if (partialResponse) {
 				let downloaded = 0;
 
+				const length = await new Promise((resolve) => https.get(url, {
+					headers: {
+						"Range": "bytes=0-1"
+					},
+					timeout: 5000
+				}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
+
 				const getChunk = (start = 0, end = 1) => new Promise((resolve, reject) => {
 					https.get(url, {
 						headers: {
@@ -204,23 +211,16 @@ const Downloader = {
 						timeout: 5000
 					}, (res) => {
 						if (res.statusCode === 206) {
-							res.response = "";
 							res.on("data", (chunk) => {
-								res.response += chunk;
+								stream.write(chunk);
 								downloaded += chunk.length;
+								Downloader.window.webContents.send("progress", id, downloaded / length);
 							});
 							res.on("error", reject);
-							resolve(res);
+							res.on("end", resolve);
 						} else reject(res.statusCode);
 					});
 				});
-
-				const length = await new Promise((resolve) => https.get(url, {
-					headers: {
-						"Range": "bytes=0-1"
-					},
-					timeout: 5000
-				}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
 
 				while (downloaded < length) {
 					const start = downloaded;
@@ -228,10 +228,7 @@ const Downloader = {
 
 					const download = async () => {
 						try {
-							const res = await getChunk(start, end);
-							res.pipe(stream, { end: end + 1 === length });
-							await new Promise((resolve) => res.on("end", resolve));
-							Downloader.window.webContents.send("progress", id, downloaded / length);
+							await getChunk(start, end);
 						} catch {
 							if (download.retries > 5) reject(`Failed to download part ${start}-${end}`);
 							else {
