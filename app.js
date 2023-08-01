@@ -219,14 +219,14 @@ const Downloader = {
 
 				while (downloaded < length) {
 					const start = downloaded;
-					const end = Math.min(start + 2 ** 22, length - 1);
+					const end = Math.min(start + 2 ** 24, length - 1);
 
 					const download = async () => {
 						try {
 							const res = await getChunk(start, end);
 							res.pipe(stream, { end: end + 1 === length });
 							await new Promise((resolve) => res.on("end", resolve));
-							Downloader.window.webContents.send("progress", id, download / length);
+							Downloader.window.webContents.send("progress", id, downloaded / length);
 						} catch {
 							if (download.retries > 5) reject(`Failed to download part ${start}-${end}`);
 							else {

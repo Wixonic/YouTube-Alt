@@ -77,23 +77,23 @@ const Pages = {
 							window.player = document.createElement("div");
 							player.threadId = 0;
 							player.load = (format) => {
+								const previousTime = videoElement.currentTime;
+								const wasPlaying = !videoElement.paused;
+
+								if (wasPlaying) videoElement.pause();
+
 								for (let x = 0; x < settingsWindow.children.length; ++x) settingsWindow.children[x].classList.remove("selected");
 
 								if (player.mediaSource instanceof MediaSource) for (const sourceBuffer of player.mediaSource.sourceBuffers) {
+									if (player.sourceBuffer.updating) player.sourceBuffer.abort();
 									if (player.mediaSource.duration > 0) player.sourceBuffer.remove(0, player.mediaSource.duration);
 									player.mediaSource.removeSourceBuffer(sourceBuffer);
 								}
 
-								const previousTime = videoElement.currentTime;
 								player.mediaSource = new MediaSource();
-								player.mediaSource.threadId = ++player.threadId;
-								videoElement.src = URL.createObjectURL(player.mediaSource);
-								videoElement.currentTime = previousTime;
-
 								player.mediaSource.addEventListener("sourceopen", () => {
-									console.log(format.type, "?");
+									const threadId = ++player.threadId;
 									player.sourceBuffer = player.mediaSource.addSourceBuffer(format.type);
-									console.log(format.type, "ok");
 
 									const xhr = new XMLHttpRequest();
 									xhr.open("GET", format.url, true);
@@ -107,42 +107,45 @@ const Pages = {
 										let cache = {};
 										setInterval(() => cache = {}, 5000);
 
-										const loadChunk = (start, end) => new Promise((resolve, reject) => {
-											if (cache[format.url] != null) {
-												player.sourceBuffer.addEventListener("abort", reject, { once: true });
-												player.sourceBuffer.addEventListener("error", reject, { once: true });
-												player.sourceBuffer.addEventListener("update", resolve, { once: true });
+										const loadChunk = (start, end) => new Promise(async (resolve, reject) => {
+											if (!cache[`${start}-${end}`]) {
+												cache[`${start}-${end}`] = await new Promise((resolve, reject) => {
+													const xhr = new XMLHttpRequest();
 
-												if (player.sourceBuffer.updating) reject();
-												else player.sourceBuffer.appendBuffer(cache[format.url]);
-											} else {
-												const xhr = new XMLHttpRequest();
+													xhr.open("GET", format.url, true);
+													xhr.responseType = "arraybuffer";
+													xhr.timeout = 10000;
+													xhr.setRequestHeader("Range", `bytes=${start}-${end}`);
 
-												xhr.open("GET", format.url, true);
-												xhr.responseType = "arraybuffer";
-												xhr.timeout = 10000;
-												xhr.setRequestHeader("Range", `bytes=${start}-${end}`);
+													xhr.addEventListener("error", () => reject("Network error"));
+													xhr.addEventListener("load", () => {
+														if (xhr.status == 206) {
+															resolve(xhr.response);
+														} else if (xhr.status == 416) {
+															console.error(`${start}-${end}/${length}`);
+														} else {
+															console.error(xhr.status);
+														}
+													});
+													xhr.addEventListener("timeout", () => reject("Timeout"));
 
-												xhr.addEventListener("error", reject);
-												xhr.addEventListener("load", () => {
-													if (xhr.status == 206) {
-														cache[format.url] = xhr.response;
-
-														player.sourceBuffer.addEventListener("abort", reject, { once: true });
-														player.sourceBuffer.addEventListener("error", reject, { once: true });
-														player.sourceBuffer.addEventListener("update", resolve, { once: true });
-
-														if (player.sourceBuffer.updating) reject();
-														else player.sourceBuffer.appendBuffer(xhr.response);
-													} else if (xhr.status == 416) {
-														console.error(`${start}-${end}/${length}`);
-													} else {
-														console.error(xhr.status);
-													}
+													xhr.send();
 												});
-												xhr.addEventListener("timeout", reject);
+											}
 
-												xhr.send();
+											player.sourceBuffer.addEventListener("abort", () => reject("Aborted"), { once: true });
+											player.sourceBuffer.addEventListener("error", () => reject("Failed"), { once: true });
+											player.sourceBuffer.addEventListener("update", resolve, { once: true });
+
+											if (player.sourceBuffer.updating) reject("Updating");
+											else if (player.threadId != threadId) reject("New thread has spawned");
+											else if (cache[`${start}-${end}`] == null) reject("Datas not loaded yet");
+											else {
+												try {
+													player.sourceBuffer.appendBuffer(cache[`${start}-${end}`]);
+												} catch {
+													reject();
+												}
 											}
 										});
 
@@ -160,9 +163,10 @@ const Pages = {
 											}
 
 											try {
-												let loop = true;
+												let loop = player.threadId == threadId;
 												while (loop) {
 													if (loadedChunks.indexOf(`${start}-${end}`) == -1) {
+														console.log(`? ${start}-${end}`);
 														await loadChunk(start, end - 1);
 														loadedChunks.push(`${start}-${end}`);
 														console.info(`+ ${start}-${end}`);
@@ -177,9 +181,11 @@ const Pages = {
 														}
 													}
 												}
-											} catch { }
+											} catch (e) {
+												console.error(`x ${start}-${end}:`, e);
+											}
 
-											if (player.threadId === player.mediaSource.threadId) setTimeout(update, 100);
+											if (player.threadId == threadId) setTimeout(update, 500);
 											else {
 												loadedChunks.forEach((chunk) => console.info(`- ${chunk}`));
 												loadedChunks = [];
@@ -191,6 +197,10 @@ const Pages = {
 									});
 									xhr.send();
 								}, { once: true });
+
+								videoElement.src = URL.createObjectURL(player.mediaSource);
+								videoElement.currentTime = previousTime;
+								if (wasPlaying) videoElement.play();
 							};
 
 							const audioElement = document.createElement("audio");
@@ -265,10 +275,12 @@ const Pages = {
 									youtube.download({
 										audio: {
 											container: formats["Audio"].container,
+											type: formats["Audio"].type.audio,
 											url: formats["Audio"].url
 										},
 										video: {
 											container: format.container,
+											type: format.type.video,
 											url: format.url
 										},
 										cover: datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url,
