@@ -329,12 +329,10 @@ const Pages = {
 									youtube.download({
 										audio: {
 											container: formats["Audio"].container,
-											type: formats["Audio"].type.audio,
 											url: formats["Audio"].url
 										},
 										video: {
 											container: format.container,
-											type: format.type.video,
 											url: format.url
 										},
 										cover: datas.videoDetails.thumbnails[datas.videoDetails.thumbnails.length - 1].url,
@@ -343,7 +341,7 @@ const Pages = {
 										channel: datas.videoDetails.author.name,
 										publishDate: datas.videoDetails.publishDate,
 
-										duration: datas.videoDetails.lengthSeconds,
+										duration: format.duration,
 
 										id,
 										format: format.id,
