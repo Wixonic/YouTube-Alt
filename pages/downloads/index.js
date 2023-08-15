@@ -41,7 +41,7 @@ class Download {
 		this.progressBar.style.width = `${percent * 100}%`;
 		this.progressPercent.innerHTML = `Progress: ${Math.floor(percent * 1000) / 10}%`;
 
-		let time = (Date.now() - this.startTimestamp) / percent;
+		let time = (Date.now() - this.startTimestamp) / percent * (1 - percent);
 		time /= 1000;
 
 		console.log(time);

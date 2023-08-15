@@ -28,7 +28,7 @@ body {
 	display: grid;
 	grid-template-columns: auto;
 	grid-auto-rows: auto;
-	grid-auto-flow: column dense;
+	grid-auto-flow: row dense;
 
 	background: var(--background);
 
