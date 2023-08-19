@@ -44,8 +44,6 @@ class Download {
 		let time = (Date.now() - this.startTimestamp) / percent * (1 - percent);
 		time /= 1000;
 
-		console.log(time);
-
 		switch (true) {
 			case time > 60 * 60:
 				time = Math.floor(time / 60 / 60);
@@ -69,7 +67,7 @@ class Download {
 	};
 
 	update(text) {
-
+		this.startTimestamp = Date.now();
 	};
 };
 

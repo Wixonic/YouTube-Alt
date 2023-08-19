@@ -6,11 +6,6 @@ const fs = require("fs");
 const https = require("https");
 const ytdl = require("ytdl-core");
 
-console.log({
-	"appData": app.getPath("appData"),
-	"tmp": app.getPath("temp")
-});
-
 const config = require("./config.json");
 
 const isDev = process.env.APP_DEV === "true";
@@ -189,87 +184,222 @@ const Downloader = {
 	id: 0,
 	window: null,
 
-	launch: (datas, quality=1) => new Promise(async (resolve) => {
+	download: async (url, path, id, partialResponse = true, force = false) => {
+		if (!fs.existsSync(path) || force) {
+			const stream = fs.createWriteStream(path);
+
+			if (partialResponse) {
+				let downloaded = 0;
+
+				const length = await new Promise((resolve) => https.get(url, {
+					headers: {
+						"Range": "bytes=0-1"
+					},
+					timeout: 5000
+				}, (res) => resolve(Number(res.headers["content-range"].split("/")[1]))));
+
+				const getChunk = (start = 0, end = 1) => new Promise((resolve, reject) => {
+					https.get(url, {
+						headers: {
+							"Range": `bytes=${start}-${end}`
+						},
+						timeout: 5000
+					}, (res) => {
+						if (res.statusCode === 206) {
+							res.on("data", (chunk) => {
+								stream.write(chunk);
+								downloaded += chunk.length;
+								Downloader.window.webContents.send("progress", id, downloaded / length);
+							});
+							res.on("error", reject);
+							res.on("end", resolve);
+						} else reject(res.statusCode);
+					});
+				});
+
+				while (downloaded < length) {
+					const start = downloaded;
+					const end = Math.min(start + 2 ** 24, length - 1);
+
+					const download = async () => {
+						try {
+							await getChunk(start, end);
+						} catch {
+							if (download.retries > 5) reject(`Failed to download part ${start}-${end}`);
+							else {
+								download.retries++;
+								await download();
+							}
+						}
+					};
+
+					download.retries = 0;
+					await download();
+				}
+			} else {
+				await new Promise((resolve, reject) => {
+					https.get(url, (res) => {
+						if (res.statusCode === 200) {
+							res.on("error", reject);
+
+							res.pipe(stream);
+							stream.on("finish", resolve);
+						} else reject(res.statusCode);
+					});
+				});
+			}
+		}
+	},
+
+	launch: (datas, quality = 1) => new Promise(async (resolve) => {
 		await Downloader.launchWindow();
 
 		const id = Downloader.id++;
 		datas.startTimestamp = Date.now();
 
-		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.id}`;
-		if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath, { recursive: true });
+		try {
+			Downloader.window.webContents.send("new", id, datas);
+		} catch { }
 
-		let ffmpegPath = require("ffmpeg-static");
-		if (!isDev) ffmpegPath = ffmpegPath.replace("app.asar", "app.asar.unpacked");
-
-		const ffmpeg = spawn(ffmpegPath, [
-			"-hide_banner",
-			"-loglevel", "verbose",
-
-			"-i", datas.audio.url,
-			"-i", datas.video.url,
-			"-i", datas.cover,
-
-			"-map", "0:a",
-			"-map", "1:v",
-			"-map", "2:v",
-
-			"-c:a:0", "aac",
-			"-c:v:1", "h264",
-
-			"-disposition:v:2", "attached_pic",
-
-			"-preset", "ultrafast",
-			"-crf", [24, 30, 40][quality], // [high quality, recommended, fastest encoding]
-
-			"-y",
-			`${downloadPath}/${datas.format}.mp4`
-		]);
-
-		delete datas.audio.url;
-		delete datas.video.url;
-
-		Downloader.window.webContents.send("new", id, datas);
-
+		const coverURL = datas.cover;
 		delete datas.cover;
+
+		const fail = () => {
+			const notification = new Notification({
+				title: "Download failed",
+				body: `Failed to download "${datas.title}" by ${datas.channel}`,
+				icon: coverURL,
+				urgency: "critical"
+			});
+			notification.show();
+
+			try {
+				Downloader.window.webContents.send("fail", id);
+			} catch { }
+
+			resolve();
+		};
+
+		const appPath = `${app.getPath("appData")}/YouTube Alt/`;
+		const tempPath = `${app.getPath("temp")}/YouTube Alt/downloads/${datas.id}-${datas.format}`;
+		const downloadPath = `${app.getPath("documents")}/YouTube Alt/downloads/${datas.id}`;
+
+		if (!fs.existsSync(appPath)) fs.mkdirSync(appPath, { recursive: true });
+		if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
+		if (!fs.existsSync(downloadPath)) fs.mkdirSync(downloadPath, { recursive: true });
 
 		fs.writeFileSync(`${downloadPath}/info.json`, JSON.stringify(datas), "utf-8");
 
-		const output = (chunk) => {
-			process.stdout.write(chunk);
-			chunk = chunk.toString();
+		if (!fs.existsSync(`${tempPath}/audio.${datas.audio.container}`)) {
+			try {
+				Downloader.window.webContents.send("update", id, "Downloading audio");
+			} catch { }
+		}
 
-			if (chunk.startsWith("frame")) {
-				try {
-					Downloader.window.webContents.send("progress", id, Number(chunk.split("fps")[0].split("=")[1]) / (datas.duration * datas.quality.fps));
-				} catch { }
-			}
-		};
-		ffmpeg.stdout.on("data", output);
-		ffmpeg.stderr.on("data", output);
+		Downloader.download(datas.audio.url, `${tempPath}/audio.${datas.audio.container}`, id)
+			.then(() => {
+				if (!fs.existsSync(`${tempPath}/video.${datas.video.container}`)) {
+					try {
+						Downloader.window.webContents.send("update", id, "Downloading video");
+					} catch { }
+				}
 
-		ffmpeg.on("exit", (code) => {
-			if (code === 0) {
-				const notification = new Notification({
-					title: "Video downloaded",
-					body: `Successfully downloaded "${datas.title}" by ${datas.channel}`,
-					icon: datas.cover,
-					urgency: "low"
-				});
-				notification.show();
-				Downloader.window.webContents.send("success", id);
-				resolve();
-			} else {
-				const notification = new Notification({
-					title: "Download failed",
-					body: `Failed to download "${datas.title}" by ${datas.channel}`,
-					icon: datas.cover,
-					urgency: "critical"
-				});
-				notification.show();
-				Downloader.window.webContents.send("fail", id);
-				resolve();
-			}
-		});
+				Downloader.download(datas.video.url, `${tempPath}/video.${datas.video.container}`, id)
+					.then(async () => {
+						if (!fs.existsSync(`${downloadPath}/cover.jpg`)) {
+							const stream = fs.createWriteStream(`${downloadPath}/cover.jpg`);
+
+							try {
+								Downloader.window.webContents.send("update", id, "Downloading cover");
+							} catch { }
+
+							await new Promise((resolve, reject) => {
+								https.get(coverURL, {
+									timeout: 10000
+								}, (res) => {
+									if (res.statusCode === 200) {
+										res.on("data", (chunk) => stream.write(chunk));
+										res.on("error", reject);
+										res.on("end", resolve);
+									} else reject(res.statusCode);
+								});
+							});
+						}
+
+						try {
+							Downloader.window.webContents.send("update", id, "Merging audio and video");
+						} catch { }
+
+						let ffmpegPath = require("ffmpeg-static");
+						if (!isDev) ffmpegPath = ffmpegPath.replace("app.asar", "app.asar.unpacked");
+
+						const ffmpeg = spawn(ffmpegPath, [
+							"-hide_banner",
+							"-loglevel", "verbose",
+
+							"-i", `${tempPath}/audio.${datas.audio.container}`,
+							"-i", `${tempPath}/video.${datas.video.container}`,
+							"-i", `${downloadPath}/cover.jpg`,
+
+							"-map", "0:a",
+							"-map", "1:v",
+							"-map", "2:v",
+
+							"-c:a:0", "aac",
+							"-c:v:1", "h264",
+
+							"-disposition:v:2", "attached_pic",
+
+							"-preset", "ultrafast",
+							"-crf", [24, 30, 40][quality], // [high quality, recommended, fastest encoding]
+
+							"-y",
+							`${downloadPath}/${datas.format}.mp4`
+						]);
+
+						delete datas.audio.url;
+						delete datas.video.url;
+
+						const output = (chunk) => {
+							process.stdout.write(chunk);
+							chunk = chunk.toString();
+
+							if (chunk.startsWith("frame")) {
+								try {
+									Downloader.window.webContents.send("progress", id, Number(chunk.split("fps")[0].split("=")[1]) / (datas.duration * datas.quality.fps));
+								} catch { }
+							}
+						};
+						ffmpeg.stdout.on("data", output);
+						ffmpeg.stderr.on("data", output);
+
+						ffmpeg.on("exit", (code) => {
+							if (code === 0) {
+								const notification = new Notification({
+									title: "Video downloaded",
+									body: `Successfully downloaded "${datas.title}" by ${datas.channel}`,
+									icon: datas.cover,
+									urgency: "low"
+								});
+								notification.show();
+
+								try {
+									Downloader.window.webContents.send("success", id);
+								} catch { }
+
+								resolve();
+							} else {
+								fail();
+							}
+						});
+					}).catch((e) => {
+						console.error(e);
+						fail();
+					});
+			}).catch((e) => {
+				console.error(e);
+				fail();
+			});
 	}),
 
 	launchWindow: () => new Promise((resolve) => {
@@ -281,14 +411,13 @@ const Downloader = {
 				height: BrowserWindow.getAllWindows()[0].getSize()[1] * 0.8,
 				minWidth: 300,
 				width: BrowserWindow.getAllWindows()[0].getSize()[0] * 0.8,
-				parent: BrowserWindow.getAllWindows()[0],
 				title: "Downloads",
 				webPreferences: {
 					preload: `${__dirname}/pages/downloads/preload.js`
 				}
 			});
 
-			Downloader.window.on("close", () => Downloader.window = null);
+			Downloader.window.on("close", () => delete Downloader.window);
 			Downloader.window.loadFile(`${__dirname}/pages/downloads/index.html`);
 			Downloader.window.on("ready-to-show", resolve)
 		} else resolve();
