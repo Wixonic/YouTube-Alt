@@ -26,7 +26,7 @@ const Pages = {
 								const id = format.hasVideo ? `${Math.min(format.width, format.height)}p${format.fps}` : "Audio";
 								if (!formats[id] && (format.container === "mp4" || format.container === "webm") && format.projectionType === "RECTANGULAR" && !format.isLive) {
 									let bitrate = format.averageBitrate / 8;
-
+									
 									switch (true) {
 										case bitrate > 10 ** 6:
 											bitrate /= 10 ** 6;
@@ -152,7 +152,7 @@ const Pages = {
 											}
 										});
 
-										const chunkSize = 2 ** 23;
+										const chunkSize = 2 ** 22;
 										let loadedChunks = {};
 
 										const update = async () => {
