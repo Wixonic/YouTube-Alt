@@ -15,52 +15,55 @@
 	},
 	"main": "app.js",
 	"scripts": {
-		"start": "APP_DEV=true electron .",
-		"clear": "rm -rf dist; clear",
-		"build": "electron-builder build --mac --win --x64 -c.mac.identity=null"
+		"build": "npm run clear; cd pages; tsc; cd ..; mkdir -p build; rsync -Dqr --exclude=./build --exclude=./dist --exclude=*.ts --exclude=tsconfig.json --include=./pages/preload.ts * build; tsc; npm run clear-typescript",
+		"test": "electron build/app.js",
+		"launch": "npm run build; npm run test",
+		"package": "npm run build; electron-builder build --mac --arm64 --universal --x64 -c.mac.identity=null --project=build; electron-builder build --win --x64 --ia32 --arm64 --project build; rsync -Dqr build/dist/ dist/; rm -fr build/dist",
+		"clear": "rm -fr ./build; rm -fr ./dist; npm run clear-typescript; clear",
+		"clear-typescript": "rm -fr ./*.js; rm -fr ./pages/*.js; rm -fr ./pages/**/*.js"
 	},
 	"engines": {
 		"node": ">=16.x.x"
 	},
 	"dependencies": {
-		"discord-rpc": "^4.0.1",
-		"ffmpeg-static": "^5.1.0",
-		"ytdl-core": "^4.11.5"
+		"@types/discord-rpc": "4.0.5",
+		"ffmpeg-static": "5.2.0",
+		"ytdl-core": "4.11.5"
 	},
 	"devDependencies": {
-		"electron": "^25.1.0",
-		"electron-builder": "^23.6.0"
+		"@types/node": "20.5.6",
+		"electron": "26.1.0",
+		"electron-builder": "24.6.3"
 	},
 	"build": {
 		"appId": "fr.wixonic.youtube-alt",
-		"artifactName": "${name}.v${version}.${os}.${ext}",
+		"artifactName": "${name}.v${version}.${os}.${arch}.${ext}",
 		"executableName": "YouTube Alt",
 		"productName": "YouTube Alt",
 		"asarUnpack": [
 			"node_modules/ffmpeg-static/*"
 		],
+		"files": [
+			"assets/**",
+			"pages/**",
+			"app.js",
+			"ipc.js",
+			"request.js",
+			"windows.js",
+			"youtube.js"
+		],
 		"mac": {
 			"files": [
-				"assets/**",
-				"!assets/icon.ico",
-				"node_modules/**",
-				"pages/**",
-				"app.js",
-				"config.json"
+				"!assets/icon.ico"
 			],
-			"icon": "./assets/icon.icns",
+			"icon": "assets/icon.icns",
 			"target": "dmg"
 		},
 		"win": {
 			"files": [
-				"assets/**",
-				"!assets/icon.icns",
-				"node_modules/**",
-				"pages/**",
-				"app.js",
-				"config.json"
+				"!assets/icon.icns"
 			],
-			"icon": "./assets/icon.ico",
+			"icon": "assets/icon.ico",
 			"target": "nsis"
 		}
 	}

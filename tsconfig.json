@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"outDir": "build",
+		"removeComments": true,
+		"rootDir": ".",
+		"target": "ES5"
+	},
+	"files": [
+		"pages/preload.ts"
+	],
+	"include": [
+		"**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"pages"
+	]
+}
