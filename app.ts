@@ -9,11 +9,6 @@ const Launch = async (): Promise<void> => {
 		path: "pages/main"
 	});
 
-	// DEV
-	main.view.webContents.openDevTools({ mode: "detach" });
-	main.view.webContents.on("dom-ready", (): void => main.view.webContents.send("id", "ZGb2hQA3hxo"));
-	// DEV
-
 	main.view.once("close", (): App => app.once("activate", Launch));
 };
 

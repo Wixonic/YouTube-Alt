@@ -1,0 +1,10 @@
+@import url("../main.css");
+
+header input {
+	text-align: center;
+}
+
+main section.player video {
+	max-width: 80%;
+	max-height: 80%;
+}
