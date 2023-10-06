@@ -37,7 +37,7 @@
 	},
 	"build": {
 		"appId": "fr.wixonic.youtube-alt",
-		"artifactName": "${name}.v${version}.${os}.${arch}.${ext}",
+		"artifactName": "${name}.${os}.${arch}.${ext}",
 		"executableName": "YouTube Alt",
 		"productName": "YouTube Alt",
 		"asarUnpack": [

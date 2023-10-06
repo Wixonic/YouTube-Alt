@@ -5,7 +5,8 @@
 [![Wakatime](https://wakatime.com/badge/github/Wixonic/YouTube-Alt.svg?style=flat)](https://wakatime.com/badge/github/Wixonic/YouTube-Alt)
 
 - [Installation](#installation)
-  - [macOS](#macos)
+  - [MacOS](#macos)
+  - [Apple Silicon Chips](#apple-silicon-chips)
 - [Privacy](#privacy)
 - [Support](https://github.com/Wixonic/YouTube-Alt/blob/Default/.github/SUPPORT.md)
 - [Code of Conduct](https://github.com/Wixonic/YouTube-Alt/blob/Default/.github/CODE_OF_CONDUCT.md)
@@ -15,23 +16,41 @@
 
 # Installation
 
-## macOS
+## MacOS
 
-**As this application is not certified, you will not be able to open it normally.**
+**As this application is not verified, you will not be able to open it normally.**
 
-Download the `.dmg` from the [releases page](https://github.com/Wixonic/YouTube-Alt/releases/latest).
-Double click on it, and move _YouTube Alt_ to the _Application_ folder:
+First, you'll need to download the application.
+There's three choices:
+
+- Universal (works on every Macs, but the file is two times heavier) [Download the latest release](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.universal.dmg).
+- Apple Silicon Chips: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.arm64.dmg).
+- Intel Chips: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.x64.dmg).
+
+Then, open it, and move _YouTube Alt_ to the _Application_ folder:
 
 <a id="#macos-install" href="#macos-install"><img height="250px" alt="macOS Disk Image Menu - Install" src="./README%20Assets/macos-install.png" /></a>
 
 Open a new Finder window, and head to _Applications_, in the sidebar.<br />
 Search for _YouTube Alt_, right-click on the app and click on _Open_.<br />
-You'll see a warning from macOS, saying that the developer cannot be verified.<br />
+You'll see a warning from macOS, saying that the developer cannot be verified _(yeah, not subscribing to the 100$ Apple Developer Program to make open-source projects)_.<br />
 If you understand the risks, click on _Open_:
 
 <a id="#macos-verify" href="#macos-verify"><img height="250px" alt="macOS Menu - macOS cannot verify the developer" src="./README%20Assets/macos-verify.png" /></a>
 
 Now, you can open the app normally.
+
+## Apple Silicon chips
+
+> [What are Apple Silicon chips and how can I see if my Mac has one of them?](https://support.apple.com/HT211814)
+
+After installing the app, you'll need to run this command in [Terminal](https://support.apple.com/guide/terminal/welcome/mac).
+
+```shell
+xattr -cr "/Applications/YouTube Alt.app"
+```
+
+If you don't want to use the Terminal, you can still download the application with the [Intel Chips version](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.x64.dmg), but you'll need to install [Rosetta 2](https://support.apple.com/HT211861).
 
 # Privacy
 
