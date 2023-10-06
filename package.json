@@ -33,7 +33,7 @@
 	"devDependencies": {
 		"@types/node": "20.5.6",
 		"electron": "26.3.0",
-		"electron-builder": "24.6.3"
+		"electron-builder": "24.6.4"
 	},
 	"build": {
 		"appId": "fr.wixonic.youtube-alt",
