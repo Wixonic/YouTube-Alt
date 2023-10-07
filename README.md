@@ -6,7 +6,8 @@
 
 - [Installation](#installation)
   - [MacOS](#macos)
-  - [Apple Silicon Chips](#apple-silicon-chips)
+    - [Apple Silicon Chips](#apple-silicon-chips)
+  - [Windows](#windows)
 - [Privacy](#privacy)
 - [Support](https://github.com/Wixonic/YouTube-Alt/blob/Default/.github/SUPPORT.md)
 - [Code of Conduct](https://github.com/Wixonic/YouTube-Alt/blob/Default/.github/CODE_OF_CONDUCT.md)
@@ -51,6 +52,10 @@ xattr -cr "/Applications/YouTube Alt.app"
 ```
 
 If you don't want to use the Terminal, you can still download the application with the [Intel Chips version](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.x64.dmg), but you'll need to install [Rosetta 2](https://support.apple.com/HT211861).
+
+## Windows
+
+[Download the latest release](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.win.exe) and follow installer's instructions.
 
 # Privacy
 
