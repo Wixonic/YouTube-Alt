@@ -1,5 +1,5 @@
 import { } from "discord-rpc";
-import { App, app } from "electron";
+import { App, app, protocol, net } from "electron";
 
 import "./ipc";
 import { Window } from "./windows";

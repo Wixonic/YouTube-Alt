@@ -1,7 +1,7 @@
 import { BrowserWindow, nativeTheme as NativeTheme } from "electron";
 import path from "path";
 
-export type WindowOptions = { alwaysOnTop?: boolean, backgroundColor?: { light?: string, dark?: string }, fullscreen?: boolean, path: string, resizable?: boolean, show?: boolean };
+export type WindowOptions = { alwaysOnTop?: boolean, backgroundColor?: { light?: string, dark?: string }, fullscreen?: boolean, path: string, resizable?: boolean, show?: boolean, webSecurity?: boolean };
 export class Window {
 	view: BrowserWindow;
 
@@ -20,7 +20,8 @@ export class Window {
 			vibrancy: "under-window",
 			visualEffectState: "active",
 			webPreferences: {
-				preload: path.join(__dirname, "pages", "preload.js")
+				preload: path.join(__dirname, "pages", "preload.js"),
+				webSecurity: options.webSecurity || false
 			}
 		});
 

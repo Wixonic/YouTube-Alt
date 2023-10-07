@@ -2,6 +2,7 @@ import { app } from "electron";
 import fs from "fs";
 import ytdl from "ytdl-core";
 
+export type videoFormat = ytdl.videoFormat;
 export type videoInfo = ytdl.videoInfo;
 
 export const getInfo = async (id: string, cache: boolean = true): Promise<ytdl.videoInfo | void> => {
