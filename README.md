@@ -24,7 +24,7 @@
 First, you'll need to download the application.
 There's three choices:
 
-- Universal (works on every Macs, but the file is two times heavier) [Download the latest release](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.universal.dmg).
+- Universal (works on every arch, but the file is heavier) [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.universal.dmg).
 - Apple Silicon Chips: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.arm64.dmg).
 - Intel Chips: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.x64.dmg).
 
@@ -55,7 +55,13 @@ If you don't want to use the Terminal, you can still download the application wi
 
 ## Windows
 
-[Download the latest release](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.win.exe) and follow installer's instructions.
+First, you'll need to download the application.
+There's four choices:
+
+- Universal (works with every arch, but the file is heavier) [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.win.universal.exe).
+- 64-bit: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.win.x64.exe).
+- ARM 64-bit: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.win.arm64.exe).
+- 32-bit: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.win.ia32.exe).
 
 # Privacy
 
