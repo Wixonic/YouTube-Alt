@@ -30,14 +30,14 @@ There's three choices:
 
 Then, open it, and move _YouTube Alt_ to the _Application_ folder:
 
-[macOS Disk Image Menu - Install](https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-install.png)
+![macOS Disk Image Menu - Install](https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-install.png)
 
 Open a new Finder window, and head to _Applications_, in the sidebar.<br />
 Search for _YouTube Alt_, right-click on the app and click on _Open_.<br />
 You'll see a warning from macOS, saying that the developer cannot be verified _(yeah, not subscribing to the 100$ Apple Developer Program to make open-source projects)_.<br />
 If you understand the risks, click on _Open_:
 
-[macOS Menu - macOS cannot verify the developer](https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-verify.png)
+![macOS Menu - macOS cannot verify the developer](https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-verify.png)
 
 Now, you can open the app normally.
 
