@@ -24,7 +24,7 @@
 First, you'll need to download the application.
 There's three choices:
 
-- Universal (works on every arch, but the file is heavier) [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.universal.dmg).
+- Universal (works on every chips, but the file is heavier) [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.universal.dmg).
 - Apple Silicon Chips: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.arm64.dmg).
 - Intel Chips: [Download this file](https://github.com/Wixonic/YouTube-Alt/releases/latest/download/youtube-alt.mac.x64.dmg).
 
