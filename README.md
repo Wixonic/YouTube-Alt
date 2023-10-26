@@ -30,14 +30,14 @@ There's three choices:
 
 Then, open it, and move _YouTube Alt_ to the _Application_ folder:
 
-<a id="#macos-install" href="#macos-install"><img height="250px" alt="macOS Disk Image Menu - Install" src="https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-install.png" /></a>
+<a href="https://github.com/Wixonic/YouTube-Alt/tree/Default/README%20Assets/macos-install.png"><img height="250px" alt="macOS Disk Image Menu - Install" src="https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-install.png" /></a>
 
 Open a new Finder window, and head to _Applications_, in the sidebar.<br />
 Search for _YouTube Alt_, right-click on the app and click on _Open_.<br />
 You'll see a warning from macOS, saying that the developer cannot be verified _(yeah, not subscribing to the 100$ Apple Developer Program to make open-source projects)_.<br />
 If you understand the risks, click on _Open_:
 
-<a id="#macos-verify" href="#macos-verify"><img height="250px" alt="macOS Menu - macOS cannot verify the developer" src="https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-verify.png" /></a>
+<a href="https://github.com/Wixonic/YouTube-Alt/tree/Default/README%20Assets/macos-verify.png"><img height="250px" alt="macOS Menu - macOS cannot verify the developer" src="https://github.com/Wixonic/YouTube-Alt/blob/Default/README%20Assets/macos-verify.png" /></a>
 
 Now, you can open the app normally.
 
