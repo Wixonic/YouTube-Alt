@@ -2,7 +2,7 @@
 > An alternative client of YouTube
 
 [![Last stable release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20stable%20release)](https://github.com/Wixonic/YouTube-Alt/releases) [![Last release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20release&include_prereleases)](https://github.com/Wixonic/YouTube-Alt/releases)<br />
-[![Wakatime](https://wakatime.com/badge/github/Wixonic/YouTube-Alt.svg?style=flat)](https://wakatime.com/badge/github/Wixonic/YouTube-Alt) [![CodeQL](https://github.com/Wixonic/YouTube-Alt/actions/workflows/codeql.yml/badge.svg)](https://github.com/Wixonic/YouTube-Alt/actions/workflows/codeql.yml)
+[![Wakatime](https://wakatime.com/badge/github/Wixonic/YouTube-Alt.svg?style=flat)](https://wakatime.com/badge/github/Wixonic/YouTube-Alt)
 
 - [Installation](#installation)
   - [MacOS](#macos)
@@ -14,6 +14,8 @@
 
 [![Contributors](https://img.shields.io/github/contributors/Wixonic/YouTube-Alt?color=%2308F&label=Contributors)](https://github.com/Wixonic/YouTube-Alt/blob/Default/.github/CONTRIBUTING.md)
 [![License](https://img.shields.io/github/license/Wixonic/YouTube-Alt?color=%23555&label=License)](https://github.com/Wixonic/YouTube-Alt/blob/Default/LICENSE)
+[![Discord](https://img.shields.io/discord/1020663521530351627?logo=discord&logoColor=94ABFC&label=Discord&color=7289DA)](https://discord.gg/BcXFAVKJZQ)<br />
+[![CodeQL](https://github.com/Wixonic/YouTube-Alt/actions/workflows/codeql.yml/badge.svg)](https://github.com/Wixonic/YouTube-Alt/actions/workflows/codeql.yml)
 
 # Installation
 
