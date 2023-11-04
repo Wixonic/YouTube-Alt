@@ -8,7 +8,7 @@
 	},
 	"homepage": "https://github.com/Wixonic/YouTube-Alt#readme",
 	"license": "MIT",
-	"version": "0.7.1-nightly",
+	"version": "0.8-nightly",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Wixonic/YouTube-Alt.git"
@@ -16,7 +16,7 @@
 	"main": "app.js",
 	"scripts": {
 		"build": "npm run clear; cd pages; tsc; cd ..; mkdir -p build; rsync -Dqr --exclude=./build --exclude=./dist --exclude=*.ts --exclude=tsconfig.json --include=./pages/preload.ts * build; tsc; npm run clear-typescript",
-		"test": "electron build/app.js",
+		"test": "APP_DEV=true electron build/app.js",
 		"launch": "npm run build; npm run test",
 		"package": "npm run build; electron-builder build --mac --arm64 --universal --x64 -c.mac.identity=null --project=build; electron-builder build --win --x64 --ia32 --arm64 --project build; rsync -Dqr build/dist/ dist/; rm -fr build/dist",
 		"clear": "rm -fr ./build; rm -fr ./dist; npm run clear-typescript; clear",

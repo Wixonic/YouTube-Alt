@@ -8,7 +8,7 @@
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
 	<meta http-equiv="content-security-policy"
-		content="script-src 'self' https://vjs.zencdn.net; style-src 'self' 'unsafe-inline' https://vjs.zencdn.net; img-src file: https:" />
+		content="script-src 'self'; style-src 'self' 'unsafe-inline'; img-src file: https:" />
 
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
@@ -16,7 +16,6 @@
 	<meta name="author" content="Wixonic, contact@wixonic.fr" />
 
 	<link type="text/css" rel="stylesheet" href="index.css" />
-	<link type="text/css" rel="stylesheet" href="https://vjs.zencdn.net/8.5.2/video-js.min.css" />
 
 	<script type="module" src="index.js"></script>
 
@@ -34,8 +33,21 @@
 
 		<section class="player">
 
-			<audio></audio>
-			<video class="video-js" controls style="aspect-ratio: 16 / 9;"></video>
+			<section class="video">
+
+				<canvas></canvas>
+
+				<section class="controls"></section>
+
+			</section>
+
+			<section class="details">
+
+				<p class="title"></p>
+
+				<section class="description"></section>
+
+			</section>
 
 		</section>
 

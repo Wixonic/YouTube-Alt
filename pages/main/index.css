@@ -4,7 +4,7 @@ header input {
 	text-align: center;
 }
 
-main section.player video {
+main section.player canvas {
 	width: 100%;
 	height: 100%;
 	max-width: 80vw;

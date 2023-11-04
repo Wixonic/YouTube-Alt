@@ -72,9 +72,9 @@ class Downloader extends EventEmitter {
 				while (range.end < length) {
 					try {
 						await downloadRange();
-						this.emit("ready");
+						this.emit("progress", range.end, length);
 					} catch (e) {
-						console.error("Failed to download:", range);
+						console.error("Failed to download:", e);
 					}
 				}
 
@@ -93,13 +93,10 @@ ipcMain.handle("playerCache:cancel", async (event: IpcMainInvokeEvent): Promise<
 	}
 });
 
-ipcMain.handle("playerCache:load", (event: IpcMainInvokeEvent, path: string, format: videoFormat, wait: boolean = true): Promise<string> => new Promise((resolve): void => {
+ipcMain.handle("playerCache:load", (event: IpcMainInvokeEvent, path: string, format: videoFormat): Promise<string> => new Promise((resolve): void => {
 	const process = new Downloader(path, format);
-	if (!wait) {
-		process.once("ready", ((): void => resolve(String(process.stream.path))));
-	} else {
-		process.once("loaded", ((): void => resolve(String(process.stream.path))));
-	}
+	process.on("progress", (current: number, total: number) => event.sender.send("playerCache:progress", current, total));
+	process.once("loaded", ((): void => resolve(String(process.stream.path))));
 }));
 
 ipcMain.handle("youtube:info", async (event: IpcMainInvokeEvent, id: string, cache?: boolean): Promise<videoInfo | void> => getInfo(id, cache));

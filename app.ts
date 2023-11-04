@@ -1,5 +1,4 @@
-import { } from "discord-rpc";
-import { App, app, protocol, net } from "electron";
+import { App, app } from "electron";
 
 import "./ipc";
 import { Window } from "./windows";
@@ -8,6 +7,8 @@ const Launch = async (): Promise<void> => {
 	const main = new Window({
 		path: "pages/main"
 	});
+
+	if (process.env.APP_DEV ? (process.env.APP_DEV.trim() == "true") : false) main.view.webContents.openDevTools({ mode: "detach" });
 
 	main.view.once("close", (): App => app.once("activate", Launch));
 };
