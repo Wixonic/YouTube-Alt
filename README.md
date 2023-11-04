@@ -1,4 +1,4 @@
-[![Last stable release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20stable%20release)](https://github.com/Wixonic/YouTube-Alt/releases) [![Last release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20release&include_prereleases)](https://github.com/Wixonic/YouTube-Alt/releases)<br />
+[![Last stable release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20stable%20release)](https://github.com/Wixonic/YouTube-Alt/releases) [![Last release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20pre-release&include_prereleases)](https://github.com/Wixonic/YouTube-Alt/releases)<br />
 [![Wakatime](https://wakatime.com/badge/github/Wixonic/YouTube-Alt.svg?style=flat)](https://wakatime.com/badge/github/Wixonic/YouTube-Alt)
 
 - [Installation](#installation)
