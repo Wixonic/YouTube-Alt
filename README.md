@@ -14,8 +14,6 @@
 [![License](https://img.shields.io/github/license/Wixonic/YouTube-Alt?color=%23555&label=License)](https://github.com/Wixonic/YouTube-Alt/blob/Default/LICENSE)
 [![Discord](https://img.shields.io/discord/1020663521530351627?logo=discord&logoColor=94ABFC&label=Discord&color=7289DA)](https://discord.gg/BcXFAVKJZQ)
 
-[![CodeQL](https://github.com/Wixonic/YouTube-Alt/actions/workflows/codeql.yml/badge.svg)](https://github.com/Wixonic/YouTube-Alt/actions/workflows/codeql.yml)
-
 # Installation
 
 ## MacOS
