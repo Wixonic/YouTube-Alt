@@ -8,7 +8,7 @@
 	},
 	"homepage": "https://github.com/Wixonic/YouTube-Alt#readme",
 	"license": "MIT",
-	"version": "0.8-nightly",
+	"version": "0.8.0-nightly",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Wixonic/YouTube-Alt.git"
@@ -23,7 +23,7 @@
 		"clear-typescript": "rm -fr ./*.js; rm -fr ./pages/*.js; rm -fr ./pages/**/*.js"
 	},
 	"engines": {
-		"node": ">=18.7.1"
+		"node": ">=18.17.1"
 	},
 	"dependencies": {
 		"@types/discord-rpc": "4.0.7",
