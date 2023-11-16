@@ -6,12 +6,6 @@ export type videoInfo = ytdlVideoInfo;
 export type videoFormat = ytdlVideoFormat;
 export type thumbnail = ytdlThumbnail;
 
-export type playerCache = {
-	cancel: () => Promise<void>;
-	load: (path: string, url: audioFormat | videoFormat) => Promise<string>;
-	onProgress: (callback: (event: Electron.IpcRendererEvent, current: number, total: number) => void) => Electron.IpcRenderer;
-};
-
 export type process = {
 	isDev: () => boolean;
 };
@@ -20,12 +14,6 @@ export type yt = {
 	info: (id: string, cache?: boolean) => Promise<videoInfo | void>;
 	getURLVideoID: (url: string) => Promise<string | void>;
 };
-
-contextBridge.exposeInMainWorld("playerCache", {
-	cancel: (): Promise<void> => ipcRenderer.invoke("playerCache:cancel"),
-	load: (path: string, url: audioFormat | videoFormat): Promise<string> => ipcRenderer.invoke("playerCache:load", path, url),
-	onProgress: (callback: (event: Electron.IpcRendererEvent, current: number, total: number) => void) => ipcRenderer.on("playerCache:progress", callback)
-});
 
 contextBridge.exposeInMainWorld("process", {
 	isDev: () => process.env.APP_DEV ? (process.env.APP_DEV.trim() == "true") : false

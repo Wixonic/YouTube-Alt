@@ -17,7 +17,5 @@ export const getInfo = async (id: string, cache: boolean = true): Promise<ytdl.v
 		fs.writeFileSync(cachePath, JSON.stringify(info), { encoding: "utf-8" });
 		console.log("Info cached for " + id);
 		return info;
-	} else {
-		return;
-	}
+	} else return;
 };

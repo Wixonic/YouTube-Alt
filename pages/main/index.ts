@@ -1,15 +1,11 @@
-import type { playerCache, process, yt, audioFormat, videoFormat, thumbnail } from "../preload.js";
-import "../main.js";
+import type { process, yt, audioFormat, videoFormat, thumbnail } from "../preload.js";
 
-declare const playerCache: playerCache;
 declare const process: process;
 declare const youtube: yt;
 
 const player: {
-	canvas?: HTMLCanvasElement,
 	audio?: HTMLAudioElement,
 	video?: HTMLVideoElement,
-	thumbnail?: HTMLImageElement,
 
 	current: {
 		id: {
@@ -33,13 +29,8 @@ const player: {
 	started: boolean,
 
 	start: () => void,
-	refresh: () => Promise<void>,
-	draw: () => void
+	refresh: () => Promise<void>
 } = {
-	audio: document.createElement("audio"),
-	video: document.createElement("video"),
-	thumbnail: document.createElement("img"),
-
 	current: {
 		id: {}
 	},
@@ -48,14 +39,16 @@ const player: {
 	started: false,
 
 	start() {
-		player.thumbnail.onload = () => player.draw();
-		player.thumbnail.src = player.datas.thumbnail.url;
+		player.video.poster = player.datas.thumbnail.url;
+
+		// Synchronize video and audio
+		// Controls
 
 		player.refresh();
 	},
 
 	async refresh() {
-		playerCache.cancel();
+		const currentTime = player.video.currentTime;
 
 		if (!player.current.id.audio) player.current.id.audio = 0;
 		if (!player.current.id.video) player.current.id.video = 0;
@@ -63,28 +56,16 @@ const player: {
 		player.current.audio = player.datas.audioFormats[player.current.id.audio];
 		player.current.video = player.datas.videoFormats[player.current.id.video];
 
-		const audioPath = await playerCache.load(`${player.datas.id}/audio/${player.current.id.audio}.${player.current.audio.container}`, player.current.audio);
-		player.audio.src = `file://${audioPath}`;
+		// Video player
 
-		const videoPath = await playerCache.load(`${player.datas.id}/video/${player.current.id.video}.${player.current.video.container}`, player.current.video);
-		player.video.src = `file://${videoPath}`;
-
-
-	},
-
-	draw() {
-		player.canvas.width = player.started ? player.video.width : player.thumbnail.width;
-		player.canvas.height = player.started ? player.video.height : player.thumbnail.height;
-
-		const ctx = player.canvas.getContext("2d");
-		ctx.drawImage(player.started ? player.video : player.thumbnail, 0, 0);
-
-		player.video.requestVideoFrameCallback(player.draw);
+		player.audio.currentTime = currentTime;
+		player.video.currentTime = currentTime;
 	}
 };
 
 window.addEventListener("DOMContentLoaded", async (): Promise<void> => {
-	player.canvas = document.querySelector("canvas");
+	player.audio = document.querySelector("main #player .video video audio");
+	player.video = document.querySelector("main #player .video video");
 
 	const url = new URL(location.href);
 
@@ -113,13 +94,8 @@ window.addEventListener("DOMContentLoaded", async (): Promise<void> => {
 
 	// DEV
 	if (process.isDev() && !url.searchParams.has("v")) {
-		searchInput.value = "https://www.youtube.com/watch?v=fZXbgWidTBQ";
-		const id = await youtube.getURLVideoID(searchInput.value);
-
-		if (id) {
-			url.searchParams.set("v", id);
-			location.href = url.href;
-		}
+		url.searchParams.set("v", "fZXbgWidTBQ");
+		location.href = url.href;
 	}
 	// DEV
 
