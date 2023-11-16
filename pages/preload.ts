@@ -6,8 +6,9 @@ export type videoInfo = ytdlVideoInfo;
 export type videoFormat = ytdlVideoFormat;
 export type thumbnail = ytdlThumbnail;
 
-export type process = {
-	isDev: () => boolean;
+export type playerCache = {
+	cancel: () => Promise<void>;
+	load: (path: string, url: audioFormat | videoFormat) => Promise<string>;
 };
 
 export type yt = {
@@ -15,8 +16,9 @@ export type yt = {
 	getURLVideoID: (url: string) => Promise<string | void>;
 };
 
-contextBridge.exposeInMainWorld("process", {
-	isDev: () => process.env.APP_DEV ? (process.env.APP_DEV.trim() == "true") : false
+contextBridge.exposeInMainWorld("playerCache", {
+	cancel: (): Promise<void> => ipcRenderer.invoke("playerCache:cancel"),
+	load: (path: string, url: audioFormat | videoFormat): Promise<string> => ipcRenderer.invoke("playerCache:load", path, url)
 });
 
 contextBridge.exposeInMainWorld("youtube", {

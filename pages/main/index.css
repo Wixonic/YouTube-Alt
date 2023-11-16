@@ -4,7 +4,7 @@ header input {
 	text-align: center;
 }
 
-main #player .video video {
+main #player video {
 	width: 100%;
 	height: 100%;
 	max-width: 80vw;
