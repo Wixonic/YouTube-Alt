@@ -51,13 +51,6 @@ const player: {
 		player.thumbnail.onload = () => player.draw();
 		player.thumbnail.src = player.datas.thumbnail.url;
 
-		playerCache.onProgress((event, current, total) => {
-			if (current == total) document.getElementById("loader").style.display = "none";
-			else {
-				document.getElementById("loader").style.removeProperty("display");
-			}
-		});
-
 		player.refresh();
 	},
 
@@ -75,6 +68,8 @@ const player: {
 
 		const videoPath = await playerCache.load(`${player.datas.id}/video/${player.current.id.video}.${player.current.video.container}`, player.current.video);
 		player.video.src = `file://${videoPath}`;
+
+
 	},
 
 	draw() {
