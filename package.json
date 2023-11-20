@@ -31,7 +31,7 @@
 		"ytdl-core": "4.10.1"
 	},
 	"devDependencies": {
-		"@types/node": "20.9.1",
+		"@types/node": "20.9.2",
 		"electron": "27.1.0",
 		"electron-builder": "24.6.4"
 	},
