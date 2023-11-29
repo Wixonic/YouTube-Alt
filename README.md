@@ -1,4 +1,4 @@
-[![Last stable release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20stable%20release)](https://github.com/Wixonic/YouTube-Alt/releases) [![Last release](https://img.shields.io/github/v/tag/Wixonic/YouTube-Alt?display_name=tag&label=Last%20pre-release)](https://github.com/Wixonic/YouTube-Alt/tags)<br />
+[![Last stable release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20stable%20release)](https://github.com/Wixonic/YouTube-Alt/releases) [![Last release](https://img.shields.io/github/v/release/Wixonic/YouTube-Alt?display_name=tag&label=Last%20pre-release&include_prereleases)](https://github.com/Wixonic/YouTube-Alt/releases)<br />
 [![Downloads](https://img.shields.io/github/downloads/Wixonic/YouTube-Alt/total?label=Downloads&color=0C0)](https://github.com/Wixonic/YouTube-Alt/releases)<br />
 [![Wakatime](https://wakatime.com/badge/github/Wixonic/YouTube-Alt.svg?style=flat)](https://wakatime.com/badge/github/Wixonic/YouTube-Alt)
 
@@ -69,5 +69,7 @@ For more information, learn about these third parties:
 
 - [Electron](https://www.electronjs.org)
 - [Chromium](https://www.chromium.org), used by _Electron_
+- [YouTube](https://www.youtube.com)
+- [YouTube Data API](https://developers.google.com/youtube)
 - [ytdl-core](https://github.com/fent/node-ytdl-core)
 - [Discord-RPC](https://www.npmjs.com/package/discord-rpc)

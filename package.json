@@ -8,7 +8,7 @@
 	},
 	"homepage": "https://github.com/Wixonic/YouTube-Alt#readme",
 	"license": "MIT",
-	"version": "0.8.0-nightly",
+	"version": "0.7.2-nightly",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Wixonic/YouTube-Alt.git"
@@ -31,9 +31,9 @@
 		"ytdl-core": "4.10.1"
 	},
 	"devDependencies": {
-		"@types/node": "20.10.0",
-		"electron": "27.1.2",
-		"electron-builder": "24.9.1"
+		"@types/node": "20.9.0",
+		"electron": "27.1.0",
+		"electron-builder": "24.6.4"
 	},
 	"build": {
 		"appId": "fr.wixonic.youtube-alt",
