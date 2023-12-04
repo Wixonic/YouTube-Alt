@@ -4,8 +4,9 @@ declare const process: process;
 declare const youtube: yt;
 
 const player: {
-	audio?: HTMLAudioElement,
-	video?: HTMLVideoElement,
+	audio: HTMLAudioElement,
+	video: HTMLVideoElement,
+	canvas?: HTMLCanvasElement,
 
 	current: {
 		id: {
@@ -27,19 +28,27 @@ const player: {
 	},
 
 	started: boolean,
+	displaying: boolean,
 
 	start: () => void,
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>,
+	display: () => void
 } = {
+	audio: document.createElement("audio"),
+	video: document.createElement("video"),
+
 	current: {
 		id: {}
 	},
 	datas: {},
 
 	started: false,
+	displaying: false,
 
 	start() {
-		player.video.poster = player.datas.thumbnail.url;
+		player.canvas.style.background = `no-repeat center/contain url("${player.datas.thumbnail.url}")`;
+
+		let button: HTMLButtonElement;
 
 		// Synchronize video and audio
 		// Controls
@@ -60,12 +69,26 @@ const player: {
 
 		player.audio.currentTime = currentTime;
 		player.video.currentTime = currentTime;
+	},
+
+	display() {
+		if (player.displaying) {
+			player.canvas.width = player.video.width;
+			player.canvas.height = player.video.height;
+
+			const ctx = player.canvas.getContext("2d");
+			ctx.drawImage(player.video, 0, 0);
+		}
+
+		requestAnimationFrame(() => player.display());
 	}
 };
 
 window.addEventListener("DOMContentLoaded", async (): Promise<void> => {
-	player.audio = document.querySelector("main #player .video video audio");
-	player.video = document.querySelector("main #player .video video");
+	player.canvas = document.getElementsByTagName("canvas")[0];
+	player.display();
+
+	// Fullscreen depends on Window Fullscreen
 
 	const url = new URL(location.href);
 
@@ -90,7 +113,7 @@ window.addEventListener("DOMContentLoaded", async (): Promise<void> => {
 			}).catch(console.warn);
 	}
 
-	const searchInput: HTMLInputElement = document.querySelector("input#search");
+	const searchInput = document.getElementById("search") as HTMLInputElement;
 
 	// DEV
 	if (process.isDev() && !url.searchParams.has("v")) {
@@ -105,8 +128,12 @@ window.addEventListener("DOMContentLoaded", async (): Promise<void> => {
 		const id = await youtube.getURLVideoID(searchInput.value);
 
 		if (id) {
+			searchInput.value = "";
 			url.searchParams.set("v", id);
 			location.href = url.href;
+		} else {
+			searchInput.value = "";
+			alert("Search is not implemented: type the video URL instead.");
 		}
 	});
 });

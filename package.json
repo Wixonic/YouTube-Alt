@@ -17,7 +17,7 @@
 	"scripts": {
 		"build": "npm run clear; cd pages; tsc; cd ..; mkdir -p build; rsync -Dqr --exclude=./build --exclude=./dist --exclude=*.ts --exclude=tsconfig.json --include=./pages/preload.ts * build; tsc; npm run clear-typescript",
 		"test": "APP_DEV=true electron build/app.js",
-		"launch": "npm run build; npm run test",
+		"start": "npm run build; npm run test",
 		"package": "npm run build; electron-builder build --mac --arm64 --universal --x64 -c.mac.identity=null --project=build; electron-builder build --win --x64 --ia32 --arm64 --project build; rsync -Dqr build/dist/ dist/; rm -fr build/dist",
 		"clear": "rm -fr ./build; rm -fr ./dist; npm run clear-typescript; clear",
 		"clear-typescript": "rm -fr ./*.js; rm -fr ./pages/*.js; rm -fr ./pages/**/*.js"

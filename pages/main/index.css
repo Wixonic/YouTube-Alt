@@ -4,9 +4,74 @@ header input {
 	text-align: center;
 }
 
-main #player .video video {
+main section.video {
+	position: sticky;
+
 	width: 100%;
 	height: 100%;
-	max-width: 80vw;
-	max-height: 80vh;
+
+	max-width: 80dvw;
+	max-height: 80dvh;
+
+	background: linear-gradient(0deg, #0002, #0006);
+
+	border-radius: 0.3rem;
+
+	transition: background-color 0.2s linear, border-radius 0.2s linear;
+}
+
+main section.video:fullscreen {
+	background: #000;
+
+	border-radius: 0;
+}
+
+main section.video canvas {
+	display: block;
+
+	width: 100%;
+	height: 100%;
+}
+
+section.controls {
+	--gap: 0.2rem;
+
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--gap);
+
+	position: absolute;
+	bottom: var(--gap);
+	left: var(--gap);
+
+	width: calc(100% - var(--gap) * 2);
+}
+
+main section.controls button {
+	display: block;
+
+	width: 1.5rem;
+	height: 1.5rem;
+
+	min-width: 1.5rem;
+	min-height: 1.5rem;
+
+	font-size: 0.8rem;
+
+	backdrop-filter: var(--backdrop-blur);
+
+	padding: 0;
+}
+
+main section.controls button svg {
+	margin: auto;
+}
+
+main section.controls div.slider {
+	width: 5rem;
+}
+
+main section.controls div.space {
+	width: 100%;
 }

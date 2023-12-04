@@ -8,7 +8,8 @@
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
 	<meta http-equiv="Content-Security-Policy"
-		content="default-src 'self'; img-src 'self' https://*; media-src 'self' https://*" />
+		content="default-src 'self'; img-src 'self' https:; media-src 'self' https:; script-src 'self' 'unsafe-inline'"
+		; />
 
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
@@ -25,34 +26,33 @@
 
 	<header>
 
-		<input id="search" type="search" placeholder="Video URL.." />
+		<input type="search" id="search" placeholder="Search.." />
 
 	</header>
 
+	<div id="blackscreen"></div>
+
 	<main>
 
-		<section id="player">
+		<section class="player">
 
 			<section class="video">
 
-				<video controls>
+				<canvas></canvas>
 
-					<audio></audio>
-
-				</video>
-
-				<section id="controls">
+				<section class="controls">
 
 					<button id="state">
 
-						<!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+						<!--! Font Awesome Pro 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license Copyright 2023 Fonticons, Inc. -->
 						<svg xmlns="http://www.w3.org/2000/svg" class="icon play" viewBox="0 0 384 512">
+
 							<path
-								d="M48 432L336 256 48 80l0 352zM24.5 38.1C39.7 29.6 58.2 30 73 39L361 215c14.3 8.7 23 24.2 23 41s-8.7 32.2-23 41L73 473c-14.8 9.1-33.4 9.4-48.5 .9S0 449.4 0 432V80C0 62.6 9.4 46.6 24.5 38.1z" />
+								d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" />
 						</svg>
 
-						<!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon pause hidden" viewBox="0 0 320 512">
+						<!--! Font Awesome Pro 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license Copyright 2023 Fonticons, Inc. -->
+						<svg xmlns="http://www.w3.org/2000/svg" class="icon pause" hidden viewBox="0 0 320 512">
 							<path
 								d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z" />
 						</svg>
@@ -61,32 +61,32 @@
 
 					<button id="sound">
 
-						<!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon disable hidden" viewBox="0 0 576 512">
+						<!--! Font Awesome Pro 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license Copyright 2023 Fonticons, Inc. -->
+						<svg xmlns="http://www.w3.org/2000/svg" class="icon disable" viewBox="0 0 576 512">
 							<path class="primary"
 								d="M320 64c0-12.6-7.4-24-18.9-29.2s-25-3.1-34.4 5.3L131.8 160H64c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64h67.8L266.7 471.9c9.4 8.4 22.9 10.4 34.4 5.3S320 460.6 320 448V64z" />
 							<path class="secondary"
 								d="M391 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z" />
 						</svg>
 
-						<!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="ivon low hidden" viewBox="0 0 448 512">
+						<!--! Font Awesome Pro 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license Copyright 2023 Fonticons, Inc. -->
+						<svg xmlns="http://www.w3.org/2000/svg" class="icon low" hidden viewBox="0 0 448 512">
 							<path class="primary"
 								d="M320 64c0-12.6-7.4-24-18.9-29.2s-25-3.1-34.4 5.3L131.8 160H64c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64h67.8L266.7 471.9c9.4 8.4 22.9 10.4 34.4 5.3S320 460.6 320 448V64z" />
 							<path class="secondary"
 								d="M378.8 185c8.4-10.3 23.5-11.8 33.8-3.5C434.1 199.1 448 225.9 448 256s-13.9 56.9-35.4 74.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C393.1 284.4 400 271 400 256s-6.9-28.4-17.7-37.3c-10.3-8.4-11.8-23.5-3.5-33.8z" />
 						</svg>
 
-						<!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon medium hidden" viewBox="0 0 576 512">
+						<!--! Font Awesome Pro 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license Copyright 2023 Fonticons, Inc. -->
+						<svg xmlns="http://www.w3.org/2000/svg" class="icon medium" hidden viewBox="0 0 576 512">
 							<path class="primary"
 								d="M352 64c0-12.6-7.4-24-18.9-29.2s-25-3.1-34.4 5.3L163.8 160H96c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64h67.8L298.7 471.9c9.4 8.4 22.9 10.4 34.4 5.3S352 460.6 352 448V64z" />
 							<path class="secondary"
 								d="M471.3 110.5c8.4-10.3 23.5-11.8 33.8-3.5c43.2 35.2 70.9 88.9 70.9 149s-27.7 113.8-70.9 149c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C507.3 341.3 528 301.1 528 256s-20.7-85.3-53.2-111.8c-10.3-8.4-11.8-23.5-3.5-33.8zM410.8 185c8.4-10.3 23.5-11.8 33.8-3.5C466.1 199.1 480 225.9 480 256s-13.9 56.9-35.4 74.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C425.1 284.4 432 271 432 256s-6.9-28.4-17.7-37.3c-10.3-8.4-11.8-23.5-3.5-33.8z" />
 						</svg>
 
-						<!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon high hidden" viewBox="0 0 640 512">
+						<!--! Font Awesome Pro 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license Copyright 2023 Fonticons, Inc. -->
+						<svg xmlns="http://www.w3.org/2000/svg" class="icon high" hidden viewBox="0 0 640 512">
 							<path class="primary"
 								d="M320 64c0-12.6-7.4-24-18.9-29.2s-25-3.1-34.4 5.3L131.8 160H64c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64h67.8L266.7 471.9c9.4 8.4 22.9 10.4 34.4 5.3S320 460.6 320 448V64z" />
 							<path class="secondary"
@@ -95,25 +95,13 @@
 
 					</button>
 
-					<!-- Sound slider -->
+					<div class="slider"></div>
 
-					<space />
-
-					<button id="airplay">
-
-						<!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 576 512">
-							<path class="primary"
-								d="M310.6 297.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-9.2 9.2-11.9 22.9-6.9 34.9s16.6 19.8 29.6 19.8H416c12.9 0 24.6-7.8 29.6-19.8s2.2-25.7-6.9-34.9l-128-128z" />
-							<path class="secondary"
-								d="M96 96H480c17.7 0 32 14.3 32 32V320c0 17.7-14.3 32-32 32H410.5l50.7 50.7c4 4 7.4 8.5 10.2 13.3H480c53 0 96-43 96-96V128c0-53-43-96-96-96H96C43 32 0 75 0 128V320c0 53 43 96 96 96h8.6c2.8-4.8 6.2-9.2 10.2-13.3L165.5 352H96c-17.7 0-32-14.3-32-32V128c0-17.7 14.3-32 32-32z" />
-						</svg>
-
-					</button>
+					<div class="space"></div>
 
 					<button id="download">
 
-						<!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+						<!--! Font Awesome Pro 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license Copyright 2023 Fonticons, Inc. -->
 						<svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 384 512">
 							<path class="primary"
 								d="M219.3 372.7L342.1 249.9c6.4-6.4 9.9-15 9.9-24c0-18.7-15.2-33.9-33.9-33.9L256 192l0-128c0-17.7-14.3-32-32-32l-64 0c-17.7 0-32 14.3-32 32l0 128-62.1 0C47.2 192 32 207.2 32 225.9c0 9 3.6 17.6 9.9 24L164.7 372.7c7.2 7.2 17.1 11.3 27.3 11.3s20.1-4.1 27.3-11.3z" />
@@ -123,31 +111,11 @@
 
 					</button>
 
-					<button id="fullscreen">
-
-						<!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon expand" viewBox="0 0 512 512">
-							<path class="primary"
-								d="M0 192c0 17.7 14.3 32 32 32s32-14.3 32-32V128h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32C14.3 64 0 78.3 0 96v96zM512 320c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H384c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V320z" />
-							<path class="secondary"
-								d="M512 192c0 17.7-14.3 32-32 32s-32-14.3-32-32V128H384c-17.7 0-32-14.3-32-32s14.3-32 32-32h96c17.7 0 32 14.3 32 32v96zM0 320c0-17.7 14.3-32 32-32s32 14.3 32 32v64h64c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V320z" />
-						</svg>
-
-						<!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon compress" viewBox="0 0 512 512">
-							<path class="primary"
-								d="M160 96c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V96zM352 416c0 17.7 14.3 32 32 32s32-14.3 32-32V352h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H384c-17.7 0-32 14.3-32 32v96z" />
-							<path class="secondary"
-								d="M352 96c0-17.7 14.3-32 32-32s32 14.3 32 32v64h64c17.7 0 32 14.3 32 32s-14.3 32-32 32H384c-17.7 0-32-14.3-32-32V96zM160 416c0 17.7-14.3 32-32 32s-32-14.3-32-32V352H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h96c17.7 0 32 14.3 32 32v96z" />
-						</svg>
-
-					</button>
-
 				</section>
 
 			</section>
 
-			<section id="details">
+			<section class="details">
 
 				<p class="title"></p>
 
