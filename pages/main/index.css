@@ -5,25 +5,31 @@ header input {
 }
 
 main section.video {
-	position: sticky;
-
 	width: 100%;
 	height: 100%;
+
+	background: linear-gradient(0deg, #8885, #888A);
+}
+
+body[fullscreen="false"] main section.video {
+	position: sticky;
 
 	max-width: 80dvw;
 	max-height: 80dvh;
 
-	background: linear-gradient(0deg, #0002, #0006);
-
 	border-radius: 0.3rem;
-
-	transition: background-color 0.2s linear, border-radius 0.2s linear;
 }
 
-main section.video:fullscreen {
-	background: #000;
+body[fullscreen="true"] main section.video {
+	position: fixed;
+	top: 0;
+	left: 0;
 
-	border-radius: 0;
+	background: #000;
+}
+
+body[fullscreen="true"] header {
+	display: none;
 }
 
 main section.video canvas {

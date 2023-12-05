@@ -27,6 +27,9 @@ export class Window {
 			if (options.backgroundColor?.dark && options.backgroundColor?.light && process.platform !== "darwin") this.view.setBackgroundColor(NativeTheme.shouldUseDarkColors ? options.backgroundColor?.dark || "#111" : options.backgroundColor?.light || "#FFF");
 		});
 
+		this.view.on("enter-full-screen", () => this.view.webContents.send("fullscreen", true));
+		this.view.on("leave-full-screen", () => this.view.webContents.send("fullscreen", false));
+
 		this.view.on("ready-to-show", (): void => {
 			if (options?.show != false) this.view.show();
 		});

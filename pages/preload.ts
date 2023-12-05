@@ -23,3 +23,5 @@ contextBridge.exposeInMainWorld("youtube", {
 	info: (id: string, cache?: boolean): Promise<videoInfo | void> => ipcRenderer.invoke("youtube:info", id, cache),
 	getURLVideoID: (url: string): Promise<string | void> => ipcRenderer.invoke("youtube:getURLVideoID", url)
 });
+
+ipcRenderer.on("fullscreen", (event, isFullscreen) => document.body.setAttribute("fullscreen", isFullscreen));
