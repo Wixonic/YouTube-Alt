@@ -18,6 +18,8 @@ body[fullscreen="false"] main section.video {
 	max-height: 80dvh;
 
 	border-radius: 0.3rem;
+
+	overflow: hidden;
 }
 
 body[fullscreen="true"] main section.video {
@@ -32,14 +34,14 @@ body[fullscreen="true"] header {
 	display: none;
 }
 
-main section.video canvas {
+main section.video video {
 	display: block;
 
 	width: 100%;
 	height: 100%;
 }
 
-section.controls {
+/* section.controls {
 	--gap: 0.2rem;
 
 	display: flex;
@@ -80,4 +82,4 @@ main section.controls div.slider {
 
 main section.controls div.space {
 	width: 100%;
-}
+} */

@@ -8,8 +8,7 @@
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
 	<meta http-equiv="Content-Security-Policy"
-		content="default-src 'self'; img-src 'self' https:; media-src 'self' https:; script-src 'self' 'unsafe-inline'"
-		; />
+		content="default-src 'self' https:; media-src 'self' https: blob:; script-src 'self' 'unsafe-inline'" />
 
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
@@ -36,7 +35,7 @@
 
 			<section class="video">
 
-				<canvas></canvas>
+				<video controls></video>
 
 				<section class="controls">
 
@@ -113,13 +112,7 @@
 
 			</section>
 
-			<section class="details">
-
-				<p class="title"></p>
-
-				<section class="description"></section>
-
-			</section>
+			<section class="details"></section>
 
 		</section>
 

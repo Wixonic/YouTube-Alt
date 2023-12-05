@@ -1,5 +1,5 @@
 :root {
-	--light-background: #6663;
+	--light-background: #6668;
 	--backdrop-blur: blur(0.3rem);
 
 	--text-color: #000;
@@ -34,6 +34,9 @@ body {
 button,
 input {
 	background: var(--light-background);
+
+	color: #FFF;
+	caret-color: #FFF;
 
 	border: 0.05rem solid transparent;
 	border-radius: 0.2rem;
