@@ -58,7 +58,7 @@ const player: {
 
 		const length = parseInt(peek.headers.get("Content-Range").split("/")[1]);
 
-		
+
 
 		await player.video.play();
 	}
